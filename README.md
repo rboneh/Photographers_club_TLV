@@ -9,5 +9,7 @@ Only one blogs subject is working.
 ToDo
 1. Add delet-blog function and action
 2. add return from blog reading page
-3. Cleanup
+3. Add edit-block function and action
+4. Make Edit menue in NavBar work
+5. Cleanup
 
