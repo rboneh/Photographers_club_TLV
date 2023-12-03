@@ -7,8 +7,7 @@ No optimization. Each time app reads all files in a dir and making new blogs tab
 Only one blogs subject is working.
 
 ToDo
-1. Fix the make table functions.
-2. fix the table to have the right link to blog file and to request it from server
-3. Add server route to get-blog
-4. Finish blog reading will send you back to the blog table.
+1. Add delet-blog function and action
+2. add return from blog reading page
+3. Cleanup
 
