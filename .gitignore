@@ -142,3 +142,6 @@ Webpack/*
 /dist
 /tmp
 /out-tsc
+
+#Project specific
+blog-*

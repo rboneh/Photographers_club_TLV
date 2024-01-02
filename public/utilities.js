@@ -179,7 +179,7 @@ export function formatBlog(blog) {
   const fBlog = `
   <div class="container p-5 my-5 border">
   <h1>${lines.slice(0, 1)}</h1>
-  <h4> Authore: ${lines[2]} </h4>
+  <h4> Author: ${lines[2]} </h4>
   <hr>
   <p> ${lines.slice(5)} </p>
   </div>
