@@ -1,16 +1,78 @@
+body {
+  /* Set overall text direction to right-to-left */
+  direction: rtl;
+  /* set height to fill the screen */
+  /* height: 100vh */
+}
+
+.full-height {
+  height: 100vh;
+}
+
+.navbar-nav {
+  float: right;
+  /* Align navbar items to the right */
+}
+
+.navbar-nav .nav-item {
+  margin-left: 15px;
+  /* Add margin to the left for spacing */
+}
+
+
 .myNavBar {
   font-family: 'DM Sans', sans-serif;
 }
 
-.h1-table{
+.h1-table {
   display: inline-block;
 }
 
-/* #brandForm > button {
-  border: none !important;
-} */
+
+.rb-carousel-item {
+  /* display: flex; */
+  /* flex-direction: row-reverse; */
+  /* justify-content: center; */
+  text-align: center;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.default-image {
+  text-align: center;
+  max-height: 75vh;
+  max-width: 90%;
+  /* Maintain aspect ratio */
+  width: auto;
+  /* Ensure the image fits within the given dimensions */
+  object-fit: contain;
+}
+
+.carousel-image {
+  max-height: 75vh;
+  /* max-width: 90%;  */
+  /* Maintain aspect ratio */
+  width: auto;
+  /* Ensure the image fits within the given dimensions */
+  object-fit: contain;
+  padding-top: 1rem;
+  /* Equivalent to py-3 */
+  padding-bottom: 1rem;
+  /* Equivalent to py-3 */
+  display: block;
+  /* Equivalent to d-block */
+}
 
 footer {
   text-align: center;
   padding: 10px;
+}
+
+
+/* Media query for mobile devices */
+@media (max-width: 576px) {
+  .carousel-image {
+    max-width: 95%;
+    /* Maximum width of 90% on small screens */
+  }
 }
