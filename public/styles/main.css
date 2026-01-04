@@ -50,7 +50,7 @@ body {
 
 .carousel-image {
   max-height: 75vh;
-  /* max-width: 90%;  */
+  max-width: 90%; 
   /* Maintain aspect ratio */
   width: auto;
   /* Ensure the image fits within the given dimensions */
