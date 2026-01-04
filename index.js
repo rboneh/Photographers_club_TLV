@@ -13,90 +13,49 @@ import * as u from "./public/utilities.js";
 
 import { v2 as cloudinary } from 'cloudinary';
 
-const cloudinaryCloudName = process.env.CLOUDINARY_CLOUD_NAME;
-const cloudinaryApiKey = process.env.CLOUDINARY_API_KEY;
-const cloudinaryApiSecret = process.env.CLOUDINARY_API_SECRET;
+// const cloudinaryCloudName = process.env.CLOUDINARY_CLOUD_NAME;
+// const cloudinaryApiKey = process.env.CLOUDINARY_API_KEY;
+// const cloudinaryApiSecret = process.env.CLOUDINARY_API_SECRET;
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const dirName = dirname(fileURLToPath(import.meta.url));
 
 const membersDir = __dirname + "/public/members";
 const exhibitionDir = __dirname + "/public/exhibition";
-console.log(membersDir);
-console.log(exhibitionDir);
-var memberList = [];
-var exhibitionList = [];
+// console.log("membersDir: ", membersDir);
+// console.log(exhibitionDir);
+const membersList = [];
+ 
+const exhibitionList = [];
 
-fs.readdir(membersDir, (err, files) => {
+fs.readdir(membersDir, (err, members) => {
   if (err) {
     console.error('Error reading directory:', err);
     return;
   }
 
   // Get all members
-  console.log('Files in directory:');
-  files.forEach(file => {
-    if (file != '.DS_Store') {
-      memberList.push(file);
+  members.forEach(member => {
+    if (member != '.DS_Store') {
+      membersList.push(member);
     }
   });
-  console.log(memberList);
+   console.log('Members in directory:');
+  console.log(membersList);
 });
-
-//Cloudinary configuration
-(async function () {
-
-  // Configuration
-  cloudinary.config({
-    cloud_name: cloudinaryCloudName,
-    api_key: cloudinaryApiKey,
-    api_secret: cloudinaryApiSecret // Click 'View API Keys' above to copy your API secret
-  });
-
-  // Upload an image
-  const uploadResult = await cloudinary.uploader
-    .upload(
-      'https://res.cloudinary.com/demo/image/upload/getting-started/shoes.jpg', {
-      public_id: 'shoes',
-    }
-    )
-    .catch((error) => {
-      console.log(error);
-    });
-
-  console.log(uploadResult);
-
-  // Optimize delivery by resizing and applying auto-format and auto-quality
-  const optimizeUrl = cloudinary.url('shoes', {
-    fetch_format: 'auto',
-    quality: 'auto'
-  });
-
-  console.log(optimizeUrl);
-
-  // Transform the image: auto-crop to square aspect_ratio
-  const autoCropUrl = cloudinary.url('shoes', {
-    crop: 'auto',
-    gravity: 'auto',
-    width: 500,
-    height: 500,
-  });
-
-  console.log(autoCropUrl);
-})();
-
-
 
 
 //List of all members photos for carousel
-var membersPhotos = u.getFiles(membersDir);
-//console.log(membersPhotos);
+const membersPhotos = u.getFiles(membersDir);
+const picturesList = u.shuffleArray(membersPhotos);
+console.log("Members Photos: ", membersPhotos);
 
 const app = express();
 const port = process.env.PORT || 3000;
-var messageBody = {};
+const messageBody = {};
 
-app.use(express.static("public"));
+// app.use(express.static("public"));
+app.use(express.static(__dirname + "/public"));
 app.use(express.urlencoded({ extended: true }));
 
 // configure EJS views
@@ -106,12 +65,17 @@ app.set("views", __dirname + "/views");
 
 //Express routing
 
-app.get("/", (req, res) => {
-  res.render("partials/index.ejs");
-});
+// app.get("/", (req, res) => {
+//   res.render("partials/index.ejs");
+// });
 
-app.get("/home", (req, res) => {
-  res.render("index.ejs");
+app.get(["/","/home"], (req, res) => {
+  // console.log('membersPhotos at /home :', membersPhotos);
+  res.render("partials/index.ejs", {
+    membersList: null,
+    picturesList: picturesList,
+    themeImage: "https://picsum.photos/id/91/3504/2336?random=1",
+  });
 });
 
 app.get("/about", (req, res) => {
@@ -125,9 +89,9 @@ app.get("/contact", (req, res) => {
 });
 
 app.get("/members", (req, res) => {
-  // console.log('manage /photo');
+   console.log('membersList at /members :', membersList);
   res.render("partials/index.ejs", {
-    member: "any",
+    membersList: membersList,
     themeImage: "https://picsum.photos/id/91/3504/2336?random=1",
   });
 });
