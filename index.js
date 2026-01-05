@@ -123,9 +123,9 @@ app.get("/exhibitions", (req, res) => {
 
   const exhibitionName = req.query.exhibition; // e.g. "2024"
   const currentExhibitionDir = `${exhibitionDir}/${exhibitionName}`;
-  console.log("Current exhibition dir:", currentExhibitionDir);
+  // console.log("Current exhibition dir:", currentExhibitionDir);
   const exhibitionPhotos = u.getFiles(currentExhibitionDir);
-  console.log(`Exhibition Photos for ${exhibitionName}:`, exhibitionPhotos);
+  // console.log(`Exhibition Photos for ${exhibitionName}:`, exhibitionPhotos);
 
   if (!exhibitionName) {
     return res.status(400).send("No exhibition selected");
