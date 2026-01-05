@@ -25,7 +25,6 @@ const exhibitionDir = __dirname + "/public/exhibition";
 // console.log("membersDir: ", membersDir);
 // console.log(exhibitionDir);
 const membersList = [];
- 
 const exhibitionList = [];
 
 fs.readdir(membersDir, (err, members) => {
@@ -47,8 +46,11 @@ fs.readdir(membersDir, (err, members) => {
 
 //List of all members photos for carousel
 const membersPhotos = u.getFiles(membersDir);
-const picturesList = u.shuffleArray(membersPhotos);
-console.log("Members Photos: ", membersPhotos);
+let picturesList = u.shuffleArray(membersPhotos);
+// console.log("Members Photos: ", membersPhotos);
+
+
+////////// Express app /////////
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -58,12 +60,12 @@ const messageBody = {};
 app.use(express.static(__dirname + "/public"));
 app.use(express.urlencoded({ extended: true }));
 
-// configure EJS views
+/////////// configure EJS views ////
 app.set("view engine", "ejs");
 app.set("views", __dirname + "/views");
 
 
-//Express routing
+///////// Express routing /////////
 
 // app.get("/", (req, res) => {
 //   res.render("partials/index.ejs");
@@ -71,8 +73,9 @@ app.set("views", __dirname + "/views");
 
 app.get(["/","/home"], (req, res) => {
   // console.log('membersPhotos at /home :', membersPhotos);
+  picturesList = u.shuffleArray(membersPhotos);
   res.render("partials/index.ejs", {
-    membersList: null,
+    membersPhotos: null,
     picturesList: picturesList,
     themeImage: "https://picsum.photos/id/91/3504/2336?random=1",
   });
@@ -89,9 +92,10 @@ app.get("/contact", (req, res) => {
 });
 
 app.get("/members", (req, res) => {
-   console.log('membersList at /members :', membersList);
+   console.log('membersPhotos at /members :', membersPhotos);
   res.render("partials/index.ejs", {
-    membersList: membersList,
+    membersPhotos: membersPhotos,
+    picturesList: null,
     themeImage: "https://picsum.photos/id/91/3504/2336?random=1",
   });
 });

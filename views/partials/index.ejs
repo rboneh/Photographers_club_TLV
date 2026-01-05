@@ -2,14 +2,14 @@
 
   <div class="d-flex flex-column min-vh-100">
     <div class="container-fluid bg-dark flex-grow-1 p-1">
-      <% if (locals.membersList) { %>
-        <% console.log("membersList in EJS:", membersList); %>
+      <% if (locals.membersPhotos) { %>
+        <% //console.log("membersPhotos in EJS:", membersPhotos); %>
           <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel" dir="rtl">
             <div class="carousel-inner container-l">
-              <% membersList.forEach((member, index)=> { %>
+              <% membersPhotos.forEach((picture, index)=> { %>
                 <div class="carousel-item rb-carousel-item <%= index === 0 ? 'active' : '' %>">
                   <div class="d-flex justify-content-center">
-                    <img src="/members/<%= member %>/trix-200-tlv-22-2.jpg" alt="<%= member %>" class="carousel-image">
+                    <img src="<%= picture %>" alt="TMP" class="carousel-image">
                   </div>
                 </div>
 

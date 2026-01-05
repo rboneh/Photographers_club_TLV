@@ -16,6 +16,10 @@ export function getFiles(dir, files = []) {
     if (fs.statSync(name).isDirectory()) {
       getFiles(name, files);
     } else {
+      // only keep .jpg / .JPG / .jpeg (optional)
+      const lower = file.toLowerCase();
+      if (!lower.endsWith(".jpg") && !lower.endsWith(".jpeg")) continue;
+
       // convert to web path
       const normalized = name.replace(/\\/g, "/"); // for Windows compatibility
       const webPath = normalized.split("/public")[1];
