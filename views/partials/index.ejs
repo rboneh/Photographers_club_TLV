@@ -51,6 +51,31 @@
               </button>
             </div>
 
+             <% } else if (locals.exhibitionPhotos) { %>
+
+            <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel" dir="rtl">
+              <div class="carousel-inner container-l">
+                <% //console.log("ejs picturesList:", picturesList); %>
+                  <% exhibitionPhotos.forEach((picture, index)=> { %>
+                    <div class="carousel-item rb-carousel-item <%= index === 0 ? 'active' : '' %>">
+                      <div class="d-flex justify-content-center">
+                        <img src="<%= picture %>" alt="TMP" class="carousel-image">
+                      </div>
+                    </div>
+
+                    <% }) %>
+
+              </div>
+
+              <!-- Left and right controls/icons -->
+              <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+              </button>
+              <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+              </button>
+            </div>
+
             <% } else { %>
               <% //console.log("EJS locals:", JSON.stringify(locals, null, 2)); %>
                 <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel" dir="rtl">

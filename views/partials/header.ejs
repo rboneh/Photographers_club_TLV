@@ -31,7 +31,8 @@
 
 <body>
   <!-- --- NavBar --- -->
-  <nav class="navbar sticky-top navbar-expand-lg bg-body-tertiary bg-dark border-bottom border-body myNavBar" data-bs-theme="dark" dir="rtl">
+  <nav class="navbar sticky-top navbar-expand-lg bg-body-tertiary bg-dark border-bottom border-body myNavBar"
+    data-bs-theme="dark" dir="rtl">
     <div class="container-fluid">
       <form id="brandForm" action="/" method="GET" class="navbar-brand bg-dark">
         <button class="navbar-brand bg-dark border-0" type="submit" aria-current="page">
@@ -67,20 +68,39 @@
             </form>
           </li>
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle disabled" href="#" role="button" data-bs-toggle="dropdown"
-              aria-expanded="false">
-              תערוכות
-            </a>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="#">Add</a></li>
-              <li><a class="dropdown-item" href="#">Delete</a></li>
-              <li>
-                <hr class="dropdown-divider" />
-              </li>
-              <li>
-                <a class="dropdown-item" href="#">Edit</a>
-              </li>
-            </ul>
+
+            <% if (!locals.exhibitionsList || locals.exhibitionsList.length===0) { %>
+
+              <!-- Disabled when empty -->
+              <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">
+                תערוכות
+              </a>
+
+              <% } else { %>
+
+                <!-- Dropdown when there are exhibitions -->
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                  aria-expanded="false">
+                  תערוכות
+                </a>
+
+                <ul class="dropdown-menu">
+
+                  <% exhibitionsList.forEach(ex=> { %>
+                    <li>
+                      <form action="/exhibitions" method="GET">
+                        <input type="hidden" name="exhibition" value="<%= ex %>">
+                        <button class="dropdown-item" type="submit">
+                          <%= ex %>
+                        </button>
+                      </form>
+                    </li>
+                    <% }) %>
+
+                </ul>
+
+                <% } %>
+
           </li>
         </ul>
       </div>
