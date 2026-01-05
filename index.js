@@ -21,18 +21,17 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const dirName = dirname(fileURLToPath(import.meta.url));
 
 const membersDir = __dirname + "/public/members";
-const exhibitionDir = __dirname + "/public/exhibition";
+const exhibitionDir = __dirname + "/public/exhibitions";
 // console.log("membersDir: ", membersDir);
 // console.log(exhibitionDir);
 const membersList = [];
-const exhibitionList = [];
+const exhibitionsList = [];
 
 fs.readdir(membersDir, (err, members) => {
   if (err) {
     console.error('Error reading directory:', err);
     return;
   }
-
   // Get all members
   members.forEach(member => {
     if (member != '.DS_Store') {
@@ -41,6 +40,21 @@ fs.readdir(membersDir, (err, members) => {
   });
    console.log('Members in directory:');
   console.log(membersList);
+});
+
+fs.readdir(exhibitionDir, (err, exhibitions) => {
+  if (err) {
+    console.error('Error reading directory:', err);
+    return;
+  }
+  // Get all members
+  exhibitions.forEach(exhibition => {
+    if (exhibition != '.DS_Store') {
+      exhibitionsList.push(exhibition);
+    }
+  });
+   console.log('Exhibitions in directory:');
+  console.log(exhibitionsList);
 });
 
 
@@ -64,6 +78,11 @@ app.use(express.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 app.set("views", __dirname + "/views");
 
+// make exhibitionsList available to all EJS views
+app.use((req, res, next) => {
+  res.locals.exhibitionsList = exhibitionsList || [];
+  next();
+});
 
 ///////// Express routing /////////
 
@@ -101,11 +120,22 @@ app.get("/members", (req, res) => {
 });
 
 app.get("/exhibitions", (req, res) => {
-  // console.log('manage /photo');
-  const fileList = u.getFiles(__dirname + "/views/blogs/photography");
-  const tableBody = u.makeTableBody(fileList, "Photography");
+
+  const exhibitionName = req.query.exhibition; // e.g. "2024"
+  const currentExhibitionDir = `${exhibitionDir}/${exhibitionName}`;
+  console.log("Current exhibition dir:", currentExhibitionDir);
+  const exhibitionPhotos = u.getFiles(currentExhibitionDir);
+  console.log(`Exhibition Photos for ${exhibitionName}:`, exhibitionPhotos);
+
+  if (!exhibitionName) {
+    return res.status(400).send("No exhibition selected");
+  } else {
+    console.log("Exhibition selected:", exhibitionName);
+  }
   res.render("partials/index.ejs", {
-    tableBody: tableBody,
+    membersPhotos: null,
+    picturesList: null,
+    exhibitionPhotos: exhibitionPhotos,
     themeImage: "https://picsum.photos/id/91/800/200?random=1",
   });
 });
