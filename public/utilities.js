@@ -18,6 +18,9 @@ export function getFiles(dir, files = []) {
     // ⛔ ignore macOS metadata files
     if (file.includes(".DS_Store")) continue;
 
+    // ⛔ ignore id_ files files
+    if (file.startsWith("id_")) continue;
+
     const name = `${dir}/${file}`;
     // This is the recursive part. If the file is a directory,
     // we call the same function again
@@ -50,13 +53,33 @@ export function genMembersDB(membersKeysArray, membersDir) {
 
   membersKeysArray.forEach(memberKey => {
     const memberDirPath = join(membersDir, memberKey);
+
+    // תמונות רגילות (id_ מסונן כבר ב-getFiles)
     const memberPhotos = getFiles(memberDirPath);
+
+    // חיפוש id_*.jpg ישירות בתיקייה
+    let idPhoto = null;
+    const allFiles = fs.readdirSync(memberDirPath);
+
+    const idFile = allFiles.find(file =>
+      file.toLowerCase().startsWith("id_") &&
+      file.toLowerCase().endsWith(".jpg")
+    );
+
+    if (idFile) {
+      // בניית נתיב מלא מה־/members/...
+      const fullPath = join(memberDirPath, idFile)
+        .replace(/\\/g, "/")           // תאימות Windows
+        .split("/public")[1];          // חיתוך עד /members
+
+      idPhoto = fullPath;
+    }
 
     const { memberName, memberAbout } = readMemberTxtIfExists(memberDirPath);
 
-
     const memberData = {
       key: memberKey,
+      idPhoto,        // 👈 הנתיב המלא של תמונת ה-ID
       photos: memberPhotos,
       memberName,
       memberAbout
@@ -67,6 +90,7 @@ export function genMembersDB(membersKeysArray, membersDir) {
 
   return membersDB;
 }
+
 
 /**
  *shuffle array in place
