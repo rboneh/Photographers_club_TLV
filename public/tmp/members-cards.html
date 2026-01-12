@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="he">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    style-src 'self' https://fonts.googleapis.com 'unsafe-inline' https://cdn.jsdelivr.net;
+    font-src 'self' https://fonts.gstatic.com data:;
+    script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline' http://code.jquery.com;
+    img-src 'self' https://picsum.photos https://fastly.picsum.photos data:;
+  " />
+
+  <title>📷 Club TLV — חברים</title>
+
+  <link rel="stylesheet" href="../styles/main.css" />
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100&display=swap" rel="stylesheet" />
+</head>
+
+<body class="m-0 bg-dark text-white">
+
+  <!-- --- NavBar --- -->
+  <nav class="navbar sticky-top navbar-expand-lg bg-body-tertiary bg-dark border-bottom border-body myNavBar"
+    data-bs-theme="dark" dir="rtl">
+    <div class="container-fluid">
+      <form id="brandForm" action="/" method="GET" class="navbar-brand bg-dark">
+        <button class="navbar-brand bg-dark border-0" type="submit" aria-current="page">
+          <object type="image/svg+xml" data="/pictures/nikon-fm2.svg" width="40px" height="30px">
+            📷
+          </object>
+          מועדון צילום תל אביב
+        </button>
+      </form>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <form id="homeForm" action="/home" method="GET">
+              <button class="nav-link" type="submit" aria-current="page">בית</button>
+            </form>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link disabled" href="#">אודות</a>
+          </li>
+          <li class="nav-item">
+            <form id="membersNav" action="/members" method="GET">
+              <button class="nav-link active" type="submit" aria-current="page">חברים</button>
+            </form>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              תערוכות
+            </a>
+            <ul class="dropdown-menu">
+              <li>
+                <form action="/exhibitions" method="GET">
+                  <input type="hidden" name="exhibition" value="2024">
+                  <button class="dropdown-item" type="submit">2024</button>
+                </form>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- ===== Page ===== -->
+  <div class="d-flex flex-column min-vh-100">
+
+    <main class="flex-grow-1">
+      <div class="container py-5">
+
+        <h1 class="mb-4 text-center">חברי המועדון</h1>
+
+        <!-- Cards Grid -->
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+
+          <!-- Card 1 -->
+          <div class="col">
+            <a href="/members/Moshe_Gross" class="text-decoration-none text-reset">
+              <div class="card bg-dark text-white h-100 border-secondary">
+                <div class="photo-box-sqr">
+                  <img src="../members/Moshe_Gross/id_sConnery-2048x2048.jpg" alt="Moshe Gross">
+                </div>
+                <div class="card-body">
+                  <h5 class="card-title mb-2">משה גרוס</h5>
+                  <p class="card-text text-white-50 mb-0">
+                    צלם דוקומנטרי מתל אביב. עובד בעיקר עם סרטי פורמט בינוני ופרויקטים ארוכי טווח.
+                  </p>
+                </div>
+              </div>
+            </a>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="col">
+            <a href="/members/Rahel_Rinat_hilling" class="text-decoration-none text-reset">
+              <div class="card bg-dark text-white h-100 border-secondary">
+                <div class="photo-box-sqr">
+                  <img src="../members/Rahel_Rinat_hilling/id_lCroft_thumb-1920-644894.jpg" alt="Rahel Rinat Hilling">
+                </div>
+                <div class="card-body">
+                  <h5 class="card-title mb-2">רחל רינת הילינג</h5>
+                  <p class="card-text text-white-50 mb-0">
+                    צלמת רחוב, ארכיטקטורה ודיוקנאות. חוקרת זהות עירונית וזיכרון.
+                  </p>
+                </div>
+              </div>
+            </a>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="col">
+            <a href="/members/Ronen_Boneh" class="text-decoration-none text-reset">
+              <div class="card bg-dark text-white h-100 border-secondary">
+                <div class="photo-box-sqr">
+                  <img src="../members/Ronen_Boneh/id_jack-bauer-wallpaper.jpg" alt="Ronen Boneh">
+                </div>
+                <div class="card-body">
+                  <h5 class="card-title mb-2">רונן בונה</h5>
+                  <p class="card-text text-white-50 mb-0">
+                    צלם נוף, נוף אורבני ואנשים. עובד עם מצלמות מדיום פורמט ו־35מ״מ.
+                  </p>
+                </div>
+              </div>
+            </a>
+          </div>
+
+        </div>
+        <!-- /Cards Grid -->
+
+      </div>
+    </main>
+
+    <footer class="bg-secondary text-center py-3 mt-auto text-white-50">
+      <div class="container">
+        <p class="mx-auto mb-0">
+          Copyright © <span id="year"></span>
+        </p>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+  <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+    crossorigin="anonymous"></script>
+
+</body>
+</html>

@@ -75,14 +75,12 @@ const init = async () => {
   });
 
   app.get("/members", (req, res) => {
-    res.render("partials/index.ejs", {
-      membersPhotos,
-      picturesList: null,
+    res.render("partials/members-cards.ejs", {
+      membersPhotos: null,
+      picturesDB: null,
       exhibitionPhotos: null,
       themeImage: "https://picsum.photos/id/91/3504/2336?random=1",
-      // if you want membersDB accessible in the view, uncomment:
-      // membersDB,
-    });
+      membersDB: membersDB,     });
   });
 
   app.get("/exhibitions", (req, res) => {
