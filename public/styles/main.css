@@ -79,6 +79,8 @@ footer {
   height: 100%;
   object-fit: cover;
   display: block;
+  margin-top: 6px;
+  border-radius: 0.5rem;
 }
 
 /* ===== Cards Hover Effect ===== */
