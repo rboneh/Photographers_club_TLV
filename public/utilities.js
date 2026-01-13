@@ -1,6 +1,6 @@
 import fs from "fs";
-import { format } from "path";
-import { promises as fsPromises } from "fs";
+// import { format } from "path";
+// import { promises as fsPromises } from "fs";
 import { join } from "path";
 
 /**
@@ -79,10 +79,10 @@ export function genMembersDB(membersKeysArray, membersDir) {
 
     const memberData = {
       key: memberKey,
-      idPhoto,        // 👈 הנתיב המלא של תמונת ה-ID
+      idPhoto: idPhoto,        // 👈 הנתיב המלא של תמונת ה-ID
       photos: memberPhotos,
-      memberName,
-      memberAbout
+      memberName: memberName,
+      memberAbout: memberAbout
     };
 
     membersDB.push(memberData);
