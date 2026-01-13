@@ -1,128 +1,58 @@
 <%- include('../partials/header') %>
 
-        <!-- ===== Page ===== -->
-        <div class="d-flex flex-column min-vh-100">
+    <!-- ===== Page ===== -->
+    <div class="d-flex flex-column min-vh-100">
 
-            <main class="flex-grow-1">
-                <div class="container py-5">
+        <main class="flex-grow-1">
+            <div class="container py-5">
+                <% if (locals.member) { %>
+                    <% /****** membersDB structure: const memberData={ key: memberKey, idPhoto: idPhoto, // 👈 הנתיב
+                        המלא של תמונת ה-ID photos: memberPhotos, memberName: memberName, memberAbout: memberAbout };
+                        ******* */ %>
+                        <% const key=member.key; const name=member.memberName ?? key; const about=member.memberAbout
+                            ?? "" ; const idPhoto=member.idPhoto ?? "public/pictures/img_avatar3.png" ; const
+                            imgSrc=idPhoto; const memberPhotos=member.photos || [] ; %>
 
-                    <h1 class="mb-4 text-center">חברי המועדון</h1>
 
-                    <!-- Cards Grid -->
-                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xxl-4 g-4">
-                        <% if (locals.member) { %>
+                            <h1 class="mb-4 text-center">
+                                <%= name %>
+                            </h1>
 
-                            <% membersDB.forEach(member=> {
-                                /****** membersDB structure:
-                                const memberData = {
-                                key: memberKey,
-                                idPhoto: idPhoto, // 👈 הנתיב המלא של תמונת ה-ID
-                                photos: memberPhotos,
-                                memberName: memberName,
-                                memberAbout: memberAbout
-                                }; *******  */
-                                const key = member.key;
-                                const name = member.memberName ?? key;
-                                const about = member.memberAbout ?? "";
-                                const idPhoto = member.idPhoto ?? "public/pictures/img_avatar3.png";
+                            <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel" dir="rtl">
+                                <div class="carousel-inner container-l">
 
-                                const imgSrc = idPhoto;
-                                %>
-
-                                <div class="col">
-                                    <a href="/member/<%= member.key %>" class="text-decoration-none text-reset">
-                                        <div class="card bg-dark text-white h-100 border-secondary">
-                                            <div class="photo-box-sqr">
-                                                <img src="<%= imgSrc %>" alt="<%= name %>">
-                                            </div>
-                                            <div class="card-body">
-                                                <h5 class="card-title mb-2">
-                                                    <%= name %>
-                                                </h5>
-                                                <% if (about) { %>
-                                                    <p class="card-text text-white-50 mb-0">
-                                                        <%= about %>
-                                                    </p>
-                                                    <% } %>
+                                    <% memberPhotos.forEach((picture, index)=> { %>
+                                        <div class="carousel-item rb-carousel-item <%= index === 0 ? 'active' : '' %>">
+                                            <div class="d-flex justify-content-center">
+                                                <img src="<%= picture %>" alt="TMP" class="carousel-image">
                                             </div>
                                         </div>
-                                    </a>
+
+                                        <% }) %>
+
                                 </div>
 
-                                <% }) %>
+                                <!-- Left and right controls/icons -->
+                                <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel"
+                                    data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon"></span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel"
+                                    data-bs-slide="next">
+                                    <span class="carousel-control-next-icon"></span>
+                                </button>
+                            </div>
 
-                                    <% } else { %>
+                            <% } else { %>
 
-                                        <!-- FALLBACK: hard-coded cards -->
+                                <p class="text-center">חבר לא נמצא.</p>
+                                <% } %>
+            </div>
+        </main>
 
-                                        <!-- Card 1 -->
-                                        <div class="col">
-                                            <a href="/member/Moshe_Gross" class="text-decoration-none text-reset">
-                                                <div class="card bg-dark text-white h-100 border-secondary">
-                                                    <div class="photo-box-sqr">
-                                                        <img src="/members/Moshe_Gross/id_sConnery-2048x2048.jpg"
-                                                            alt="Moshe Gross">
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <h5 class="card-title mb-2">ג׳יימס בונד</h5>
-                                                        <p class="card-text text-white-50 mb-0">
-                                                            צלם דוקומנטרי מתל אביב. עובד בעיקר עם סרטי פורמט בינוני
-                                                            ופרויקטים ארוכי טווח.
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </a>
-                                        </div>
+        <%- include('../partials/footer') %>
 
-                                        <!-- Card 2 -->
-                                        <div class="col">
-                                            <a href="/member/Rahel_Rinat_hilling"
-                                                class="text-decoration-none text-reset">
-                                                <div class="card bg-dark text-white h-100 border-secondary">
-                                                    <div class="photo-box-sqr">
-                                                        <img src="/members/Rahel_Rinat_Hilling/id_lCroft_thumb-1920-644894.jpg"
-                                                            alt="Rahel Rinat Hilling">
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <h5 class="card-title mb-2">לארה קרופט</h5>
-                                                        <p class="card-text text-white-50 mb-0">
-                                                            צלמת רחוב, ארכיטקטורה ודיוקנאות. חוקרת זהות עירונית וזיכרון.
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </a>
-                                        </div>
-
-                                        <!-- Card 3 -->
-                                        <div class="col">
-                                            <a href="/member/Ronen_Boneh" class="text-decoration-none text-reset">
-                                                <div class="card bg-dark text-white h-100 border-secondary">
-                                                    <div class="photo-box-sqr">
-                                                        <img src="/members/Ronen_Boneh/id_jack-bauer-wallpaper.jpg"
-                                                            alt="Ronen Boneh">
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <h5 class="card-title mb-2">ג׳ק באואר</h5>
-                                                        <p class="card-text text-white-50 mb-0">
-                                                            צלם נוף, נוף אורבני ואנשים. עובד עם מצלמות מדיום פורמט
-                                                            ו־35מ״מ.
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </a>
-                                        </div>
-
-                                        <% } %>
-
-                    </div>
-                    <!-- /Cards Grid -->
-
-                </div>
-            </main>
-
-            <%- include('../partials/footer') %>
-
-        </div>
+    </div>
 
     </body>
 
