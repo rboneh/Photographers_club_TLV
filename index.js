@@ -58,7 +58,7 @@ const init = async () => {
   // ---------- Routes ----------
   app.get(["/", "/home"], (req, res) => {
     const picturesList = u.shuffleArray([...membersPhotos]); // avoid mutating original
-    res.render("partials/index.ejs", {
+    res.render("pages/index.ejs", {
       membersPhotos: null,
       picturesList,
       exhibitionPhotos: null,
@@ -74,15 +74,40 @@ const init = async () => {
     res.sendStatus(201);
   });
 
+  //members cards page
   app.get("/members", (req, res) => {
-    res.render("partials/members-cards.ejs", {
+    res.render("pages/members-cards.ejs", {
       membersPhotos: null,
       picturesDB: null,
       exhibitionPhotos: null,
       themeImage: "https://picsum.photos/id/91/3504/2336?random=1",
-      membersDB: membersDB,     });
+      membersDB: membersDB,
+    });
   });
 
+  // member page route
+  app.get("/member/:key", (req, res) => {
+    const memberKey = req.params.key;
+
+    console.log("Member requested:", memberKey);
+
+    const member = membersDB.find(m => m.key === memberKey);
+
+    if (!member) {
+      return res.status(404).send("Member not found");
+    }
+
+    res.render("pages/member-page.ejs", {
+      member: member,
+      membersPhotos: null,
+      picturesDB: null,
+      exhibitionPhotos: null,
+      themeImage: "https://picsum.photos/id/91/3504/2336?random=1",
+      membersDB: membersDB,
+    });
+  });
+
+  // exhibitions page route
   app.get("/exhibitions", (req, res) => {
     const exhibitionName = req.query.exhibition; // e.g. "2024"
 
@@ -99,7 +124,7 @@ const init = async () => {
 
     const exhibitionPhotos = u.getFiles(currentExhibitionDir);
 
-    res.render("partials/index.ejs", {
+    res.render("pages/index.ejs", {
       membersPhotos: null,
       picturesList: null,
       exhibitionPhotos,
