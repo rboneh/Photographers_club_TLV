@@ -2,6 +2,9 @@
 
   <div class="d-flex flex-column min-vh-100">
     <div class="container-fluid bg-dark flex-grow-1 p-1">
+
+      <h1 class="text-center">מועדון הצילום תל אביב</h1>
+      
       <% if (locals.membersPhotos) { %>
         <% //console.log("membersPhotos in EJS:", membersPhotos); %>
           <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel" dir="rtl">
@@ -51,66 +54,68 @@
               </button>
             </div>
 
-             <% } else if (locals.exhibitionPhotos) { %>
+            <% } else if (locals.exhibitionPhotos) { %>
 
-            <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel" dir="rtl">
-              <div class="carousel-inner container-l">
-                <% //console.log("ejs picturesList:", picturesList); %>
-                  <% exhibitionPhotos.forEach((picture, index)=> { %>
-                    <div class="carousel-item rb-carousel-item <%= index === 0 ? 'active' : '' %>">
-                      <div class="d-flex justify-content-center">
-                        <img src="<%= picture %>" alt="TMP" class="carousel-image">
+              <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel" dir="rtl">
+                <div class="carousel-inner container-l">
+                  <% //console.log("ejs picturesList:", picturesList); %>
+                    <% exhibitionPhotos.forEach((picture, index)=> { %>
+                      <div class="carousel-item rb-carousel-item <%= index === 0 ? 'active' : '' %>">
+                        <div class="d-flex justify-content-center">
+                          <img src="<%= picture %>" alt="TMP" class="carousel-image">
+                        </div>
                       </div>
-                    </div>
 
-                    <% }) %>
+                      <% }) %>
 
+                </div>
+
+                <!-- Left and right controls/icons -->
+                <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
+                  <span class="carousel-control-prev-icon"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next">
+                  <span class="carousel-control-next-icon"></span>
+                </button>
               </div>
 
-              <!-- Left and right controls/icons -->
-              <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon"></span>
-              </button>
-              <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next">
-                <span class="carousel-control-next-icon"></span>
-              </button>
-            </div>
+              <% } else { %>
+                <% //console.log("EJS locals:", JSON.stringify(locals, null, 2)); %>
+                  <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel" dir="rtl">
+                    <!-- The slideshow/carousel -->
+                    <div class="carousel-inner container-l">
+                      <div class="carousel-item active rb-carousel-item">
+                        <div class="d-flex justify-content-center">
+                          <img src="/members/Moshe_Gross/5119 - Donna Rock, Maryland, Waitress - 25 Years.jpg"
+                            alt="Moshe_Gross" class="carousel-image">
+                        </div>
+                      </div>
+                      <div class="carousel-item rb-carousel-item">
+                        <div class="d-flex justify-content-center">
+                          <img src="/members/Rahel_Rinat_Hilling/14.jpg" alt="Rahel_Rinat_Hilling"
+                            class="carousel-image">
+                        </div>
+                      </div>
+                      <div class="carousel-item rb-carousel-item">
+                        <div class="d-flex justify-content-center">
+                          <img src="/members/Ronen_Boneh/trix-200-tlv-22-2.jpg" alt="Ronen_Boneh"
+                            class="carousel-image">
+                        </div>
+                      </div>
 
-            <% } else { %>
-              <% //console.log("EJS locals:", JSON.stringify(locals, null, 2)); %>
-                <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel" dir="rtl">
-                  <!-- The slideshow/carousel -->
-                  <div class="carousel-inner container-l">
-                    <div class="carousel-item active rb-carousel-item">
-                      <div class="d-flex justify-content-center">
-                        <img src="/members/Moshe_Gross/5119 - Donna Rock, Maryland, Waitress - 25 Years.jpg"
-                          alt="Moshe_Gross" class="carousel-image">
-                      </div>
-                    </div>
-                    <div class="carousel-item rb-carousel-item">
-                      <div class="d-flex justify-content-center">
-                        <img src="/members/Rahel_Rinat_Hilling/14.jpg" alt="Rahel_Rinat_Hilling" class="carousel-image">
-                      </div>
-                    </div>
-                    <div class="carousel-item rb-carousel-item">
-                      <div class="d-flex justify-content-center">
-                        <img src="/members/Ronen_Boneh/trix-200-tlv-22-2.jpg" alt="Ronen_Boneh" class="carousel-image">
-                      </div>
                     </div>
 
+                    <!-- Left and right controls/icons -->
+                    <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel"
+                      data-bs-slide="prev">
+                      <span class="carousel-control-prev-icon"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel"
+                      data-bs-slide="next">
+                      <span class="carousel-control-next-icon"></span>
+                    </button>
                   </div>
-
-                  <!-- Left and right controls/icons -->
-                  <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel"
-                    data-bs-slide="prev">
-                    <span class="carousel-control-prev-icon"></span>
-                  </button>
-                  <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel"
-                    data-bs-slide="next">
-                    <span class="carousel-control-next-icon"></span>
-                  </button>
-                </div>
-                <% } %>
+                  <% } %>
     </div>
 
     <%- include("../partials/footer") %>

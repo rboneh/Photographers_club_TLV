@@ -23,6 +23,12 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
 // ---------- Load data BEFORE routes/server ----------
+
+/**
+ * safeReadDirNames - read directory names safely, return empty array on error
+ * @param {*} dirPath   - path to directory 
+ * @returns {Array} - array of directory names .DS_Store excluded
+ */
 const safeReadDirNames = async (dirPath) => {
   try {
     const items = await fs.readdir(dirPath);
@@ -49,13 +55,25 @@ const init = async () => {
   const membersDB = u.genMembersDB(membersList, membersDir);
   console.log("membersDB size:", membersDB.length);
 
+  // exhibitionsDB (now exhibitionsList is ready) for use to create exhibition page
+  const exhibitionsDB = u.genExhibitionsDB(exhibitionsList, exhibitionDir);
+  console.log("exhibitionsDB size:", Object.keys(exhibitionsDB).length);
+
+  const exhibitionsDB4Carousel = u.genExhibitsionsDB4Carousel(exhibitionsDB);
+  console.log("exhibitionsDB4Carousel size:", Object.keys(exhibitionsDB4Carousel).length);  
+
+  // make membersDB available to all EJS views
+
   // make exhibitionsList available to all EJS views
   app.use((req, res, next) => {
     res.locals.exhibitionsList = exhibitionsList;
+    // res.locals.exhibitionsDB = exhibitionsDB;
     next();
   });
 
-  // ---------- Routes ----------
+
+
+  // ---------- Routes ------------------------------------------------
   app.get(["/", "/home"], (req, res) => {
     const picturesList = u.shuffleArray([...membersPhotos]); // avoid mutating original
     res.render("pages/index.ejs", {
@@ -109,25 +127,30 @@ const init = async () => {
 
   // exhibitions page route
   app.get("/exhibitions", (req, res) => {
-    const exhibitionName = req.query.exhibition; // e.g. "2024"
+    const exhibitionName = req.query.exhibition; // e.g. "2024 - Spring Exhibition"
 
     if (!exhibitionName) {
       return res.status(400).send("No exhibition selected");
     }
 
-    const currentExhibitionDir = path.join(exhibitionDir, exhibitionName);
+    // const currentExhibitionDir = path.join(exhibitionDir, exhibitionName);
+
+    const exhibitionObj = exhibitionsDB4Carousel[exhibitionName];
+    if (!exhibitionObj) {
+      return res.status(404).send("Exhibition not found in DB");
+    }
 
     // (optional) validate selection exists in list
     if (!exhibitionsList.includes(exhibitionName)) {
       return res.status(404).send("Exhibition not found");
     }
 
-    const exhibitionPhotos = u.getFiles(currentExhibitionDir);
-
-    res.render("pages/index.ejs", {
+    res.render("pages/exhibition-page.ejs", {
       membersPhotos: null,
       picturesList: null,
-      exhibitionPhotos,
+      exhibitionPhotos: null ,
+      exhibitionKey: exhibitionName,
+      exhibitionObj: exhibitionObj,
       themeImage: "https://picsum.photos/id/91/800/200?random=1",
     });
   });
