@@ -7,66 +7,92 @@
             <div class="container py-5">
 
                 <% if (locals.exhibitionObj && locals.exhibitionKey) { %>
-                    <% const exhibitionName = locals.exhibitionObj.exhibitionName; %>
-                    <% const exhibitionAbout = locals.exhibitionObj.exhibitionAbout; %>
-                    <% const exhibitionPhotosArr = locals.exhibitionObj.exhibitionPhotosArr; %>
+                    <% const exhibitionName=locals.exhibitionObj.exhibitionName; %>
+                        <% const exhibitionAbout=locals.exhibitionObj.exhibitionAbout; %>
+                            <% const exhibitionPhotosArr=locals.exhibitionObj.exhibitionPhotosArr; %>
 
-                                    <div class="d-flex flex-column justify-content-center mt-4">
-                                        <h1 class="mb-4 text-center">מועדון צילום תל אביב</h1>
-                                        <h1 class="mb-4 text-center">
-                                            <%= exhibitionName %>
-                                        </h1>
-                                        <p class="h5 text-center">
-                                            <%= exhibitionAbout %>
-                                        </p>
-                                    </div>
+                                <div class="d-flex flex-column justify-content-center mt-4">
+                                    <h1 class="mb-4 text-center">מועדון צילום תל אביב</h1>
+                                    <h1 class="mb-4 text-center">
+                                        <%= exhibitionName %>
+                                    </h1>
+                                    <p class="h5 text-center">
+                                        <%= exhibitionAbout %>
+                                    </p>
+                                </div>
 
-                                    <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel" dir="rtl">
-                                        <div class="carousel-inner container-l">
+                                <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel" dir="rtl">
+                                    <div class="carousel-inner container-l">
 
-                                            <% exhibitionPhotosArr.forEach((exhibitionPhoto, index) => { %>
-                                                <% const imgSrc = exhibitionPhoto.picture ?? "public/pictures/img_avatar3.png"; %>
-                                                <% const memberName = exhibitionPhoto.name ?? ""; %>
-                                                <% const memberAbout = exhibitionPhoto.about ?? ""; %>
+                                        <% exhibitionPhotosArr.forEach((exhibitionPhoto, index)=> {
+                                            const imgSrc = exhibitionPhoto.picture ??
+                                            "/public/pictures/img_avatar3.png";
+                                            const memberName = exhibitionPhoto.name ?? "";
+                                            const memberAbout = exhibitionPhoto.about ?? "";
+                                            %>
 
-                                                <div class="carousel-item rb-carousel-item <%= index === 0 ? 'active' : '' %>">
-                                                    <div class="d-flex justify-content-center">
-                                                        <img src="<%= imgSrc %>" alt="TMP" class="carousel-image">
-                                                    </div>
-                                                    <div class="d-flex flex-column justify-content-center mt-4">
-                                                        <h1 class="mb-4 text-center">
-                                                            <%= memberName %>
-                                                        </h1>
-                                                        <p class="h5 text-center">
-                                                            <%= memberAbout %>
-                                                        </p>
-                                                    </div>
+                                            <div class="carousel-item rb-carousel-item <%= index === 0 ? 'active' : '' %>"
+                                                data-member-name="<%= memberName %>"
+                                                data-member-about="<%= memberAbout %>">
+                                                <div class="d-flex justify-content-center">
+                                                    <img src="<%= imgSrc %>" class="carousel-image">
                                                 </div>
-                                            <% }) %>
-                                        </div>
+                                            </div>
 
-                                        <!-- Left and right controls/icons -->
-                                        <button class="carousel-control-prev" type="button"
-                                            data-bs-target="#mainCarousel" data-bs-slide="prev">
-                                            <span class="carousel-control-prev-icon"></span>
-                                        </button>
-                                        <button class="carousel-control-next" type="button"
-                                            data-bs-target="#mainCarousel" data-bs-slide="next">
-                                            <span class="carousel-control-next-icon"></span>
-                                        </button>
+                                            <% }) %>
+
                                     </div>
 
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel"
+                                        data-bs-slide="prev">
+                                        <span class="carousel-control-prev-icon"></span>
+                                    </button>
 
-                                        <%}  else { %>
-                                            <h1 class="text-center">מועדון צילום תל אביב</h1>
-                                            <h2 class="text-center">התערוכה לא נמצאה.</h2>
-                                            <% } %>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel"
+                                        data-bs-slide="next">
+                                        <span class="carousel-control-next-icon"></span>
+                                    </button>
+                                </div>
+
+                                <div id="memberInfo" class="d-flex flex-column justify-content-center mt-4 text-center">
+                                    <h1 id="memberName"></h1>
+                                    <p class="h5" id="memberAbout"></p>
+                                </div>
+
+
+
+
+                                <%} else { %>
+                                    <h1 class="text-center">מועדון צילום תל אביב</h1>
+                                    <h2 class="text-center">התערוכה לא נמצאה.</h2>
+                                    <% } %>
             </div>
         </main>
 
         <%- include('../partials/footer') %>
 
     </div>
+
+    <script>
+        const carousel = document.getElementById("mainCarousel");
+        const nameEl = document.getElementById("memberName");
+        const aboutEl = document.getElementById("memberAbout");
+
+        function updateMemberInfo(activeItem) {
+            nameEl.textContent = activeItem.dataset.memberName || "";
+            aboutEl.textContent = activeItem.dataset.memberAbout || "";
+        }
+
+        // initial load
+        const firstActive = carousel.querySelector(".carousel-item.active");
+        if (firstActive) updateMemberInfo(firstActive);
+
+        // on slide change
+        carousel.addEventListener("slid.bs.carousel", (event) => {
+            updateMemberInfo(event.relatedTarget);
+        });
+    </script>
+
 
     </body>
 
