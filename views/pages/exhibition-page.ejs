@@ -1,0 +1,73 @@
+<%- include('../partials/header') %>
+
+    <!-- ===== Page ===== -->
+    <div class="d-flex flex-column min-vh-100">
+
+        <main class="flex-grow-1">
+            <div class="container py-5">
+
+                <% if (locals.exhibitionObj && locals.exhibitionKey) { %>
+                    <% const exhibitionName = locals.exhibitionObj.exhibitionName; %>
+                    <% const exhibitionAbout = locals.exhibitionObj.exhibitionAbout; %>
+                    <% const exhibitionPhotosArr = locals.exhibitionObj.exhibitionPhotosArr; %>
+
+                                    <div class="d-flex flex-column justify-content-center mt-4">
+                                        <h1 class="mb-4 text-center">מועדון צילום תל אביב</h1>
+                                        <h1 class="mb-4 text-center">
+                                            <%= exhibitionName %>
+                                        </h1>
+                                        <p class="h5 text-center">
+                                            <%= exhibitionAbout %>
+                                        </p>
+                                    </div>
+
+                                    <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel" dir="rtl">
+                                        <div class="carousel-inner container-l">
+
+                                            <% exhibitionPhotosArr.forEach((exhibitionPhoto, index) => { %>
+                                                <% const imgSrc = exhibitionPhoto.picture ?? "public/pictures/img_avatar3.png"; %>
+                                                <% const memberName = exhibitionPhoto.name ?? ""; %>
+                                                <% const memberAbout = exhibitionPhoto.about ?? ""; %>
+
+                                                <div class="carousel-item rb-carousel-item <%= index === 0 ? 'active' : '' %>">
+                                                    <div class="d-flex justify-content-center">
+                                                        <img src="<%= imgSrc %>" alt="TMP" class="carousel-image">
+                                                    </div>
+                                                    <div class="d-flex flex-column justify-content-center mt-4">
+                                                        <h1 class="mb-4 text-center">
+                                                            <%= memberName %>
+                                                        </h1>
+                                                        <p class="h5 text-center">
+                                                            <%= memberAbout %>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            <% }) %>
+                                        </div>
+
+                                        <!-- Left and right controls/icons -->
+                                        <button class="carousel-control-prev" type="button"
+                                            data-bs-target="#mainCarousel" data-bs-slide="prev">
+                                            <span class="carousel-control-prev-icon"></span>
+                                        </button>
+                                        <button class="carousel-control-next" type="button"
+                                            data-bs-target="#mainCarousel" data-bs-slide="next">
+                                            <span class="carousel-control-next-icon"></span>
+                                        </button>
+                                    </div>
+
+
+                                        <%}  else { %>
+                                            <h1 class="text-center">מועדון צילום תל אביב</h1>
+                                            <h2 class="text-center">התערוכה לא נמצאה.</h2>
+                                            <% } %>
+            </div>
+        </main>
+
+        <%- include('../partials/footer') %>
+
+    </div>
+
+    </body>
+
+    </html>
