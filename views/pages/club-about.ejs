@@ -1,0 +1,90 @@
+<%- include('../partials/header') %>
+
+    <!-- ===== Page ===== -->
+    <div class="d-flex flex-column min-vh-100" dir="rtl">
+
+        <main class="flex-grow-1">
+            <div class="container py-5">
+
+                <img src="/pictures/XT5A3742.jpg" alt="Trees Line" class="img-fluid mb-4 d-block mx-auto">
+
+                <h1 class="mb-4 text-center">אודות מועדון הצילום תל אביב</h1>
+
+                <p class=" h6 mb-4">
+                    מועדון הצילום תל אביב הוקם בשנת 1992 במטרה לקדם את אמנות הצילום בעיר תל אביב ולהוות פלטפורמה למפגש
+                    של צלמים חובבים. המועדון מונה כ 30 חברים פעילים, המגיעים מרקעים מגוונים ומתחומי צילום שונים.
+                </p>
+
+                <form method="POST" action="/contact" class="mt-4" dir="rtl">
+                    <!-- honeypot anti-spam (hidden) -->
+                    <div class="d-none">
+                        <label for="website">Website</label>
+                        <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label for="name" class="form-label">שם</label>
+                            <input id="name" name="name" class="form-control" placeholder="השם שלך" required>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="email" class="form-label">אימייל</label>
+                            <input id="email" name="email" type="email" class="form-control"
+                                placeholder="name@example.com" required>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="message" class="form-label">הודעה</label>
+                            <textarea id="message" name="message" class="form-control" rows="5"
+                                placeholder="כתוב/כתבי כאן את ההודעה…" required></textarea>
+                        </div>
+
+                        <div class="col-12 d-flex justify-content-center">
+                            <button id="sendBtn" type="submit" class="btn btn-primary px-5">
+                                שליחה
+                            </button>
+                        </div>
+
+                        <div class="col-12">
+                            <p class="small text-muted text-center mb-0">
+                                נענה בהקדם. לא נשתמש בפרטים שלך לשום מטרה אחרת.
+                            </p>
+                        </div>
+                    </div>
+                </form>
+
+
+
+            </div>
+        </main>
+
+        <%- include('../partials/footer') %>
+
+    </div>
+
+    <% if (typeof sent !=="undefined" ) { %>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const btn = document.getElementById("sendBtn");
+                if (!btn) return;
+
+                const message = "<%= sent === "1" ? "נשלח בהצלחה ✅" : "שגיאה בשליחה ❌" %>";
+
+                const pop = new bootstrap.Popover(btn, {
+                    content: message,
+                    placement: "top",
+                    trigger: "manual"
+                });
+
+                pop.show();
+
+                setTimeout(() => pop.hide(), 3500);
+            });
+        </script>
+        <% } %>
+
+
+            </body>
+
+            </html>

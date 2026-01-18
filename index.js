@@ -4,6 +4,7 @@ import express from "express";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
 import fs from "fs/promises";
+import { Resend } from "resend";
 
 import * as u from "./public/utilities.js";
 
@@ -12,6 +13,7 @@ console.log("__dirname:", __dirname);
 
 const membersDir = path.join(__dirname, "public", "members");
 const exhibitionDir = path.join(__dirname, "public", "exhibitions");
+const resend = new Resend(process.env.RESEND_API_KEY); // for email sending (if needed)
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -73,6 +75,7 @@ const init = async () => {
 
 
 
+
   // ---------- Routes ------------------------------------------------
   app.get(["/", "/home"], (req, res) => {
     const picturesList = u.shuffleArray([...membersPhotos]); // avoid mutating original
@@ -85,7 +88,15 @@ const init = async () => {
   });
 
   app.get("/about", (req, res) => {
-    res.sendStatus(201);
+    const sent = req.query.sent; // "1" או "0" או undefined
+    res.render("pages/club-about.ejs", {
+      membersPhotos: null,
+      picturesDB: null,
+      exhibitionPhotos: null,
+      themeImage: "https://picsum.photos/id/91/3504/2336?random=1",
+      membersDB: membersDB,
+      sent: sent,
+    });
   });
 
   app.get("/contact", (req, res) => {
@@ -154,6 +165,31 @@ const init = async () => {
       themeImage: "https://picsum.photos/id/91/800/200?random=1",
     });
   });
+
+  /**
+   * Contact form submission - send email using Resend
+   */
+  app.post("/contact", async (req, res) => {
+  const { name, email, message } = req.body;
+     console.log("POST /contact hit", req.body);
+  try {
+    await resend.emails.send({
+      from: "Club TLV <onboarding@resend.dev>",   // ב-Resend אפשר לשנות כשמאמתים דומיין
+      to: process.env.CONTACT_EMAIL,
+      reply_to: email,
+      subject: `Contact form: ${name}`,
+      text: `From: ${name} <${email}>\n\n${message}`,
+    });
+
+    return res.redirect("/about?sent=1");
+  } catch (err) {
+    console.error(err);
+     return res.redirect("/about?sent=0");
+  }
+});
+
+
+
 
   // ---------- Start server ----------
   app.listen(port, () => {

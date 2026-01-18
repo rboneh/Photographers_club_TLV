@@ -94,6 +94,15 @@ footer {
   box-shadow: 0 10px 25px rgba(0,0,0,.4);
 }
 
+/* ===== Carousel Controls To make arrows always visiable===== */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  background-color: rgba(0, 0, 0, 0.5); /* רקע כהה חצי שקוף */
+  border-radius: 50%;
+  padding: 20px;
+}
+
+
 /* ===== Responsive ===== */
 
 @media (max-width: 576px) {
