@@ -57,6 +57,9 @@ const init = async () => {
   const membersDB = u.genMembersDB(membersList, membersDir);
   console.log("membersDB size:", membersDB.length);
 
+  const membersPhotosArr4Carousel = u.genMembersPhotosArr(membersDir);
+  console.log("membersPhotosArr4Carousel size:", membersPhotosArr4Carousel.length);
+
   // exhibitionsDB (now exhibitionsList is ready) for use to create exhibition page
   const exhibitionsDB = u.genExhibitionsDB(exhibitionsList, exhibitionDir);
   console.log("exhibitionsDB size:", Object.keys(exhibitionsDB).length);
@@ -78,11 +81,12 @@ const init = async () => {
 
   // ---------- Routes ------------------------------------------------
   app.get(["/", "/home"], (req, res) => {
-    const picturesList = u.shuffleArray([...membersPhotos]); // avoid mutating original
+    const shuffeldPhotoObjArr = u.shuffleArray([...membersPhotosArr4Carousel]); // avoid mutating original
     res.render("pages/index.ejs", {
       membersPhotos: null,
-      picturesList,
-      exhibitionPhotos: null,
+      picturesList: null,
+      membersPhotosArr4Carousel: shuffeldPhotoObjArr,
+      exhibitionPhotos: null, 
       themeImage: "https://picsum.photos/id/91/3504/2336?random=1",
     });
   });

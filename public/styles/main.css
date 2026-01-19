@@ -102,6 +102,17 @@ footer {
   padding: 20px;
 }
 
+/* ===== Main Carousel Frame ===== */
+#mainCarousel .main-carousel-frame {
+  display: inline-block;   /* shrink-wrap to image width */
+}
+
+#mainCarousel .carousel-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
 
 /* ===== Responsive ===== */
 
