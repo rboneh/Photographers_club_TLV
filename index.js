@@ -171,22 +171,31 @@ const init = async () => {
    */
   app.post("/contact", async (req, res) => {
   const { name, email, message } = req.body;
-     console.log("POST /contact hit", req.body);
+  console.log("POST /contact hit", req.body);
+
+  const to = process.env.CONTACT_EMAIL;
+  if (!to) {
+    console.error("Missing CONTACT_EMAIL env var");
+    return res.redirect("/about?sent=0");
+  }
+
   try {
-    await resend.emails.send({
-      from: "Club TLV <onboarding@resend.dev>",   // ב-Resend אפשר לשנות כשמאמתים דומיין
-      to: process.env.CONTACT_EMAIL,
-      reply_to: email,
+    const result = await resend.emails.send({
+      from: "Club TLV <onboarding@resend.dev>",
+      to: [to],                 // ← מערך, בטוח
+      replyTo: email,           // ← זה השם הנכון ב-SDK (לא reply_to)
       subject: `Contact form: ${name}`,
       text: `From: ${name} <${email}>\n\n${message}`,
     });
 
+    console.log("Resend result:", result);
     return res.redirect("/about?sent=1");
   } catch (err) {
-    console.error(err);
-     return res.redirect("/about?sent=0");
+    console.error("Resend error:", err);
+    return res.redirect("/about?sent=0");
   }
 });
+
 
 
 
