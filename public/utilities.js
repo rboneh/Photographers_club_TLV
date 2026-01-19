@@ -327,9 +327,89 @@ export function genExhibitsionsDB4Carousel(exhibistinsDB){
  * @param {string} dir - starting directory
  * @param {Array} files - array to accumulate photo objects
  * @returns {Array} files- array of photo objects 
- * photo object: { name: string, about: string, picture: string }
+ * Each photo object: { name: string, about: string, picture: string }
  */
 export function genExhibitionPhotosArr(dir, files = []) {
+
+  const fileList = fs.readdirSync(dir);
+
+  // ---- leaf detection ----
+  const hasSubDirs = fileList.some((file) => {
+    if (file.includes(".DS_Store")) return false;
+    const fullPath = path.join(dir, file);
+    return fs.existsSync(fullPath) && fs.statSync(fullPath ).isDirectory();
+  });
+
+  // =======================
+  // LEAF FOLDER: read member.txt + collect pictures
+  // =======================
+  if (!hasSubDirs) {
+    // find member.txt (must exist in leaf)
+    const memberTxtName = fileList.find((f) => f.toLowerCase() === "member.txt");
+    if (!memberTxtName) return files;
+
+    const memberTxtPath = path.join(dir, memberTxtName);
+    const content = fs.readFileSync(memberTxtPath, "utf8");
+
+    let memberName = "";
+    let memberAbout = "";
+
+    for (const rawLine of content.split(/\r?\n/)) {
+      const line = rawLine.trim();
+      if (line.startsWith("שם:")) memberName = line.replace("שם:", "").trim();
+      else if (line.startsWith("אודות:")) memberAbout = line.replace("אודות:", "").trim();
+    }
+
+    // collect jpg/jpeg in this leaf
+    for (const file of fileList) {
+      if (file.includes(".DS_Store")) continue;
+      if (file.startsWith("id_")) continue;
+      if (file.toLowerCase() === "member.txt") continue;
+
+      const lower = file.toLowerCase();
+      if (!lower.endsWith(".jpg") && !lower.endsWith(".jpeg")) continue;
+
+      const fullPath = path.join(dir, file);
+
+      // convert to web path like you did
+      const normalized = fullPath.replace(/\\/g, "/");
+      const webPath = normalized.split("/public")[1];
+
+      files.push({
+        name: memberName,
+        about: memberAbout,
+        picture: webPath,
+      });
+    }
+
+    return files;
+  }
+
+  // =======================
+  // NOT LEAF: recurse into subfolders
+  // =======================
+  for (const file of fileList) {
+    if (file.includes(".DS_Store")) continue;
+    if (file.startsWith("id_")) continue;
+
+    const name = path.join(dir, file);
+
+    if (fs.statSync(name).isDirectory()) {
+      genExhibitionPhotosArr(name, files); // <-- recursion
+    }
+  }
+
+  return files;
+}
+
+/**
+ * Recursive function to generate exhibition photos DB
+ * @param {string} dir - starting directory
+ * @param {Array} files - array to accumulate photo objects
+ * @returns {Array} files- array of photo objects 
+ * Each photo object: { name: string, about: string, picture: string }
+ */
+export function genMembersPhotosArr(dir, files = []) {
 
   const fileList = fs.readdirSync(dir);
 
