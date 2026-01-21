@@ -1,13 +1,15 @@
 import "dotenv/config";
 
-import express from "express";
-import path, { dirname } from "path";
-import { fileURLToPath } from "url";
-import fs from "fs/promises";
-import { Resend } from "resend";
+import express from "express"; // express framework
+import path, { dirname } from "path"; // path utilities
+import { fileURLToPath } from "url"; // to get __dirname in ES module
+import fs from "fs/promises"; // promise-based fs
+import { Resend } from "resend"; // email sending service
+import helmet from "helmet"; // security middleware
 
-import * as u from "./public/utilities.js";
+import * as u from "./public/utilities.js"; // custom utilities
 
+// __dirname setup for ES modules
 const __dirname = dirname(fileURLToPath(import.meta.url));
 console.log("__dirname:", __dirname);
 
@@ -17,10 +19,47 @@ const resend = new Resend(process.env.RESEND_API_KEY); // for email sending (if 
 
 const app = express();
 const port = process.env.PORT || 3000;
+// ---------- App setup ----------
+app.use(helmet()); // security middleware - set various HTTP headers for security
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
 
-app.use(express.static(path.join(__dirname, "public")));
-app.use(express.urlencoded({ extended: true }));
+      styleSrc: [
+        "'self'",
+        "https://fonts.googleapis.com",
+        "https://cdn.jsdelivr.net",
+        "'unsafe-inline'",   // can remove later
+      ],
 
+      fontSrc: [
+        "'self'",
+        "https://fonts.gstatic.com",
+        "data:",
+      ],
+
+      scriptSrc: [
+        "'self'",
+        "https://cdn.jsdelivr.net",
+        "https://code.jquery.com",
+        "'unsafe-inline'",   // can remove later
+      ],
+
+      imgSrc: [
+        "'self'",
+        "https://picsum.photos",
+        "https://fastly.picsum.photos",
+        "data:",
+      ],
+    },
+  })
+);
+
+app.use(express.static(path.join(__dirname, "public"))); // static files middleware
+app.use(express.urlencoded({ extended: true })); // to parse form data
+
+// set EJS as templating engine 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
@@ -65,7 +104,7 @@ const init = async () => {
   console.log("exhibitionsDB size:", Object.keys(exhibitionsDB).length);
 
   const exhibitionsDB4Carousel = u.genExhibitsionsDB4Carousel(exhibitionsDB);
-  console.log("exhibitionsDB4Carousel size:", Object.keys(exhibitionsDB4Carousel).length);  
+  console.log("exhibitionsDB4Carousel size:", Object.keys(exhibitionsDB4Carousel).length);
 
   // make membersDB available to all EJS views
 
@@ -86,7 +125,7 @@ const init = async () => {
       membersPhotos: null,
       picturesList: null,
       membersPhotosArr4Carousel: shuffeldPhotoObjArr,
-      exhibitionPhotos: null, 
+      exhibitionPhotos: null,
       themeImage: "https://picsum.photos/id/91/3504/2336?random=1",
     });
   });
@@ -163,7 +202,7 @@ const init = async () => {
     res.render("pages/exhibition-page.ejs", {
       membersPhotos: null,
       picturesList: null,
-      exhibitionPhotos: null ,
+      exhibitionPhotos: null,
       exhibitionKey: exhibitionName,
       exhibitionObj: exhibitionObj,
       themeImage: "https://picsum.photos/id/91/800/200?random=1",
@@ -174,31 +213,31 @@ const init = async () => {
    * Contact form submission - send email using Resend
    */
   app.post("/contact", async (req, res) => {
-  const { name, email, message } = req.body;
-  console.log("POST /contact hit", req.body);
+    const { name, email, message } = req.body;
+    console.log("POST /contact hit", req.body);
 
-  const to = process.env.CONTACT_EMAIL;
-  if (!to) {
-    console.error("Missing CONTACT_EMAIL env var");
-    return res.redirect("/about?sent=0");
-  }
+    const to = process.env.CONTACT_EMAIL;
+    if (!to) {
+      console.error("Missing CONTACT_EMAIL env var");
+      return res.redirect("/about?sent=0");
+    }
 
-  try {
-    const result = await resend.emails.send({
-      from: "Club TLV <onboarding@resend.dev>",
-      to: [to],                 // ← מערך, בטוח
-      replyTo: email,           // ← זה השם הנכון ב-SDK (לא reply_to)
-      subject: `Contact form: ${name}`,
-      text: `From: ${name} <${email}>\n\n${message}`,
-    });
+    try {
+      const result = await resend.emails.send({
+        from: "Club TLV <onboarding@resend.dev>",
+        to: [to],                 // ← מערך, בטוח
+        replyTo: email,           // ← זה השם הנכון ב-SDK (לא reply_to)
+        subject: `Contact form: ${name}`,
+        text: `From: ${name} <${email}>\n\n${message}`,
+      });
 
-    console.log("Resend result:", result);
-    return res.redirect("/about?sent=1");
-  } catch (err) {
-    console.error("Resend error:", err);
-    return res.redirect("/about?sent=0");
-  }
-});
+      console.log("Resend result:", result);
+      return res.redirect("/about?sent=1");
+    } catch (err) {
+      console.error("Resend error:", err);
+      return res.redirect("/about?sent=0");
+    }
+  });
 
 
 
