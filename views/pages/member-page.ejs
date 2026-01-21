@@ -25,7 +25,7 @@
                                     <% memberPhotos.forEach((picture, index)=> { %>
                                         <div class="carousel-item rb-carousel-item <%= index === 0 ? 'active' : '' %>">
                                             <div class="d-flex justify-content-center">
-                                                <img src="<%= picture %>" alt="TMP" class="carousel-image">
+                                                <img src="<%= picture %>" loading="lazy" alt="צילום של <%= name %>"  class="carousel-image">
                                             </div>
                                         </div>
 

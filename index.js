@@ -171,6 +171,8 @@ const init = async () => {
 
     res.render("pages/member-page.ejs", {
       member: member,
+      pageTitle: `${member.memberName} | מועדון הצילום תל אביב`,
+      pageDescription: member.memberAbout,
       membersPhotos: null,
       picturesDB: null,
       exhibitionPhotos: null,
