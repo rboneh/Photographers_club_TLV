@@ -33,6 +33,13 @@ html, body {
   display: inline-block;
 }
 
+
+.handwriting-hebrew {
+  font-family: "Playpen Sans Hebrew", cursive;
+  font-optical-sizing: auto;
+  /* font-weight: 400; */
+  font-style: normal;
+}
 /* ===== Carousel ===== */
 
 .rb-carousel-item {
@@ -64,7 +71,7 @@ footer {
   width: 140px;
 }
 
-/* ריבוע אחיד לתמונות id */
+/*id unified square */
 
 .photo-box-sqr {
   width: 280px;           /* דסקטופ */

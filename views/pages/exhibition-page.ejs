@@ -16,13 +16,13 @@
                                     <h1 class="mb-4 text-center">
                                         <%= exhibitionName %>
                                     </h1>
-                                    <p class="h5 text-center">
+                                    <p class="h5 text-end mx-1">
                                         <%= exhibitionAbout %>
                                     </p>
                                 </div>
 
                                 <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel" dir="rtl">
-                                    <div class="carousel-inner container-l">
+                                    <div class="carousel-inner container-l ">
 
                                         <% exhibitionPhotosArr.forEach((exhibitionPhoto, index)=> {
                                             const imgSrc = exhibitionPhoto.picture ??
@@ -34,8 +34,8 @@
                                             <div class="carousel-item rb-carousel-item <%= index === 0 ? 'active' : '' %>"
                                                 data-member-name="<%= memberName %>"
                                                 data-member-about="<%= memberAbout %>">
-                                                <div class="d-flex justify-content-center">
-                                                    <img src="<%= imgSrc %>" class="carousel-image">
+                                                <div class="d-flex justify-content-center pb-0">
+                                                    <img src="<%= imgSrc %>" class="carousel-image pb-0">
                                                 </div>
                                             </div>
 
@@ -55,8 +55,8 @@
                                 </div>
 
                                 <div id="memberInfo" class="d-flex flex-column justify-content-center mt-4 text-center">
-                                    <h1 id="memberName"></h1>
-                                    <p class="h5" id="memberAbout"></p>
+                                    <h2 id="memberName" class="handwriting-hebrew "></h1>
+                                    <p class="h5 text-end mx-1" id="memberAbout"></p>
                                 </div>
 
 
