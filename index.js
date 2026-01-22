@@ -41,6 +41,7 @@ app.use(
 
       scriptSrc: [
         "'self'",
+        "https://res.cloudinary.com",
         "https://cdn.jsdelivr.net",
         "https://code.jquery.com",
         "'unsafe-inline'",   // can remove later
