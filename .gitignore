@@ -145,3 +145,9 @@ Webpack/*
 
 #Project specific
 blog-*
+
+# NPM packages
+*.tgz
+node_modules/
+# Cloudinary cache folder
+.cloudinary_cache   
