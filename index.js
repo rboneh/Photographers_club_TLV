@@ -1,4 +1,5 @@
 import "dotenv/config";
+console.log("MEDIA_BACKEND =", process.env.MEDIA_BACKEND);
 
 import express from "express"; // express framework
 import path, { dirname } from "path"; // path utilities
@@ -7,14 +8,16 @@ import fs from "fs/promises"; // promise-based fs
 import { Resend } from "resend"; // email sending service
 import helmet from "helmet"; // security middleware
 
-import * as u from "./public/utilities.js"; // custom utilities
+import * as u from "./public/utilities_cloudinary.js"; // custom utilities
 
 // __dirname setup for ES modules
 const __dirname = dirname(fileURLToPath(import.meta.url));
 console.log("__dirname:", __dirname);
 
 const membersDir = path.join(__dirname, "public", "members");
+console.log("membersDir:", membersDir);
 const exhibitionDir = path.join(__dirname, "public", "exhibitions");
+console.log("exhibitionDir:", exhibitionDir);
 const resend = new Resend(process.env.RESEND_API_KEY); // for email sending (if needed)
 
 const app = express();
@@ -41,7 +44,6 @@ app.use(
 
       scriptSrc: [
         "'self'",
-        "https://res.cloudinary.com",
         "https://cdn.jsdelivr.net",
         "https://code.jquery.com",
         "'unsafe-inline'",   // can remove later
@@ -49,9 +51,15 @@ app.use(
 
       imgSrc: [
         "'self'",
+        "https://res.cloudinary.com",
         "https://picsum.photos",
         "https://fastly.picsum.photos",
         "data:",
+      ],
+
+      connectSrc: [
+        "'self'",
+        "https://res.cloudinary.com",
       ],
     },
   })
@@ -71,41 +79,47 @@ app.set("views", path.join(__dirname, "views"));
  * @param {*} dirPath   - path to directory 
  * @returns {Array} - array of directory names .DS_Store excluded
  */
-const safeReadDirNames = async (dirPath) => {
-  try {
-    const items = await fs.readdir(dirPath);
-    return items.filter((x) => x !== ".DS_Store"); // filter out macOS metadata files
-  } catch (err) {
-    console.error(`Error reading directory: ${dirPath}`, err);
-    return [];
-  }
-};
+// const safeReadDirNames = async (dirPath) => {
+//   try {
+//     const items = await fs.readdir(dirPath);
+//     return items.filter((x) => x !== ".DS_Store"); // filter out macOS metadata files
+//   } catch (err) {
+//     console.error(`Error reading directory: ${dirPath}`, err);
+//     return [];
+//   }
+// };
 
 const init = async () => {
-  // lists
-  const membersList = await safeReadDirNames(membersDir);
-  const exhibitionsList = await safeReadDirNames(exhibitionDir);
+  const isCloudinary = process.env.MEDIA_BACKEND === "cloudinary";
+  console.log("isCloudinary =", isCloudinary);
+  const CLOUD_ROOT = process.env.CLOUDINARY_ROOT || "tlv_club";
+  console.log("CLOUD_ROOT =", CLOUD_ROOT);
 
-  console.log("membersList:", membersList);
-  console.log("exhibitionsList:", exhibitionsList);
+  const membersDir = isCloudinary
+    ? `${CLOUD_ROOT}/members`
+    : path.join(__dirname, "public", "members");
 
-  // photos
-  const membersPhotos = u.getFiles(membersDir); //getFiles is synchronous read. Need to be change to async. 
-  console.log("Members Photos count:", membersPhotos.length);
+  const exhibitionDir = isCloudinary
+    ? `${CLOUD_ROOT}/exhibitions`
+    : path.join(__dirname, "public", "exhibitions");
 
-  // members DB (now membersList is ready)
-  const membersDB = u.genMembersDB(membersList, membersDir);
-  console.log("membersDB size:", membersDB.length);
+  // Read members and exhibitions folders
+  const membersList = isCloudinary
+    ? await u.listFolders(membersDir)
+    : await safeReadDirNames(membersDir);
+  console.log("membersList =", membersList);  
+  const exhibitionsList = isCloudinary
+    ? await u.listFolders(exhibitionDir)
+    : await safeReadDirNames(exhibitionDir);
+console.log("exhibitionsList =", exhibitionsList);
 
-  const membersPhotosArr4Carousel = u.genMembersPhotosArr(membersDir);
-  console.log("membersPhotosArr4Carousel size:", membersPhotosArr4Carousel.length);
+  // From here on: use membersDir/exhibitionsDir everywhere
+  const membersPhotos = await u.getFilesCloudinary(membersDir);
+  const membersDB = await u.genMembersDB(membersList, membersDir);
+  const membersPhotosArr4Carousel = await u.genMembersPhotosArr(membersDir);
 
-  // exhibitionsDB (now exhibitionsList is ready) for use to create exhibition page
-  const exhibitionsDB = u.genExhibitionsDB(exhibitionsList, exhibitionDir);
-  console.log("exhibitionsDB size:", Object.keys(exhibitionsDB).length);
-
-  const exhibitionsDB4Carousel = u.genExhibitsionsDB4Carousel(exhibitionsDB);
-  console.log("exhibitionsDB4Carousel size:", Object.keys(exhibitionsDB4Carousel).length);
+  const exhibitionsDB = await u.genExhibitionsDB(exhibitionsList, exhibitionDir);
+  const exhibitionsDB4Carousel = await u.genExhibitsionsDB4Carousel(exhibitionsDB);
 
   // make membersDB available to all EJS views
 
