@@ -200,8 +200,8 @@ const init = async () => {
     if (!exhibitionsList.includes(exhibitionName)) {
       return res.status(404).send("Exhibition not found");
     }
-
-    res.render("pages/exhibition-page.ejs", {
+    // res.render("pages/exhibition-page-carousel.ejs", {
+    res.render("pages/exhibition-page-grid.ejs", {
       membersPhotos: null,
       picturesList: null,
       exhibitionPhotos: null,

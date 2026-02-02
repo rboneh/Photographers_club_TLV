@@ -1,0 +1,170 @@
+<%- include('../partials/header') %>
+
+    <!-- ===== Page ===== -->
+    <div class="d-flex flex-column min-vh-100">
+
+        <main class="flex-grow-1">
+            <div class="container-fluid py-5">
+
+                <% if (locals.exhibitionObj && locals.exhibitionKey) { %>
+                    <% const exhibitionName=locals.exhibitionObj.exhibitionName; %>
+                        <% const exhibitionAbout=locals.exhibitionObj.exhibitionAbout; %>
+                            <% const exhibitionPhotosArr=locals.exhibitionObj.exhibitionPhotosArr; %>
+
+                                <div class="container py-5 d-flex flex-column justify-content-center mt-4">
+                                    <h1 class="mb-4 text-center">מועדון צילום תל אביב</h1>
+                                    <h2 class="mb-4 text-center">
+                                        <%= exhibitionName %>
+                                    </h2>
+                                    <p class="h5 text-end mx-1">
+                                        <%= exhibitionAbout %>
+                                    </p>
+                                </div>
+
+
+
+                                <!-- exhibition pictures grid -->
+                                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xxl-4 g-3">
+                                    <% exhibitionPhotosArr.forEach((exhibitionPhoto, index)=> {
+                                        const imgSrc = exhibitionPhoto.picture ?? "/pictures/img_avatar3.png"; //
+                                        const memberName = exhibitionPhoto.name ?? "";
+                                        const memberAbout = exhibitionPhoto.about ?? "";
+                                        %>
+
+                                        <div class="col">
+                                            <button type="button" class="btn p-0 border-0 w-100 rb-thumb"
+                                                data-member-name="<%= memberName %>"
+                                                data-member-about="<%= memberAbout %>" data-img-src="<%= imgSrc %>"
+                                                aria-label="צילום מאת <%= memberName %>">
+                                                <img src="<%= imgSrc %>" class="img-fluid rounded shadow-sm w-100"
+                                                    loading="lazy" alt="צילום מאת <%= memberName %>">
+                                            </button>
+                                        </div>
+
+                                        <% }) %>
+                                </div>
+            </div>
+
+
+            <div id="memberInfo" class="d-flex flex-column justify-content-center mt-4 text-center">
+                <h2 id="memberName" class="handwriting-hebrew"></h2>
+                <p class="h5 text-end mx-1" id="memberAbout"></p>
+            </div>
+
+            <!-- ✅ JSON-LD schema (Google) -->
+            <script type="application/ld+json">
+                                    <%- JSON.stringify({
+                                    "@context": "https://schema.org",
+                                    "@type": "ExhibitionEvent",
+                                    name: exhibitionName,
+                                    description: exhibitionAbout,
+                                    organizer: { "@type": "Organization", name: "מועדון הצילום תל אביב" }
+                                    }) %>
+                                    </script>
+
+            <% } else { %>
+                <h1 class="text-center">מועדון צילום תל אביב</h1>
+                <h2 class="text-center">התערוכה לא נמצאה.</h2>
+                <% } %>
+
+    </div>
+    </main>
+
+    <%- include('../partials/footer') %>
+        </div>
+
+
+
+        <div class="modal fade" id="photoModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered rb-modal-90">
+                <div class="modal-content bg-dark">
+                    <button type="button" class="btn-close btn-close-white ms-auto m-2" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+
+                    <div class="modal-body p-0 d-flex justify-content-center align-items-center">
+                        <img id="modalImg" class="img-fluid" alt="">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <script>
+            const grid = document.querySelector(".row.g-3");
+            const nameEl = document.getElementById("memberName");
+            const aboutEl = document.getElementById("memberAbout");
+
+            const previewImg = document.getElementById("previewImg");
+            const modalImg = document.getElementById("modalImg");
+
+            const modalEl = document.getElementById("photoModal");
+            const photoModal = modalEl ? new bootstrap.Modal(modalEl) : null;
+
+            function updateMemberInfoFromBtn(btn) {
+                nameEl.textContent = btn?.dataset?.memberName || "";
+                aboutEl.textContent = btn?.dataset?.memberAbout || "";
+            }
+
+            function setPreviewFromBtn(btn) {
+                const src = btn?.dataset?.imgSrc;
+                if (previewImg && src) {
+                    previewImg.src = src;
+                    previewImg.alt = btn?.dataset?.memberName ? `צילום מאת ${btn.dataset.memberName}` : "";
+                }
+                updateMemberInfoFromBtn(btn);
+            }
+
+            function setModalFromBtn(btn) {
+                const src = btn?.dataset?.imgSrc;
+                if (modalImg && src) {
+                    modalImg.src = src;
+                    modalImg.alt = btn?.dataset?.memberName ? `צילום מאת ${btn.dataset.memberName}` : "";
+                }
+            }
+
+            if (grid && nameEl && aboutEl) {
+                // initial
+                const first = grid.querySelector(".rb-thumb");
+                if (first) {
+                    setPreviewFromBtn(first);
+                    first.classList.add("active");
+                }
+
+                // click
+                grid.addEventListener("click", (e) => {
+                    const btn = e.target.closest(".rb-thumb");
+                    if (!btn) return;
+
+                    grid.querySelectorAll(".rb-thumb.active").forEach(b => b.classList.remove("active"));
+                    btn.classList.add("active");
+
+                    setPreviewFromBtn(btn);    // keep member info synced
+                    setModalFromBtn(btn);
+
+                    if (photoModal) photoModal.show();
+                });
+            }
+
+
+        </script>
+
+        <script src="https://unpkg.com/imagesloaded@5/imagesloaded.pkgd.min.js"></script>
+        <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+        <script>
+            // Initialize Masonry after all images have loaded
+            const gridElement = document.querySelector('.row.g-3');
+            if (gridElement) {
+                imagesLoaded(gridElement, function () {
+                    new Masonry(gridElement, {
+                        itemSelector: '.col',
+                        percentPosition: true,
+                        gutter: 16
+                    });
+                });
+            }
+        </script>
+        
+        </body>
+
+        </html>

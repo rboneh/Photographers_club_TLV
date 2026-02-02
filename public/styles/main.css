@@ -47,8 +47,8 @@ html, body {
   padding: 20px 0;
 }
 
-.default-image,
-.carousel-image {
+/* keep default images constrained if you want */
+.default-image {
   max-height: 75vh;
   max-width: 90%;
   width: auto;
@@ -57,6 +57,20 @@ html, body {
   margin: 0 auto;
   padding: 1rem 0;
 }
+
+/* MAIN CAROUSEL: full-bleed */
+#mainCarousel .carousel-image {
+  /* width: auto%; */
+  max-width: 90%;
+  max-height: none;    /* important: don't cap width-driven scaling */
+  width: 80%;
+  height: 65vh;      /* smaller */
+  object-fit: cover;
+  margin: 0 auto;           /* no centering margins */
+  padding: 1rem 0;        /* remove inner padding */
+  display: block;
+}
+
 
 /* ===== Footer ===== */
 
@@ -131,4 +145,45 @@ footer {
   .photo-box-sqr {
     width: 220px;   /* מובייל */
   }
+}
+
+
+/* ===== Exhibition Page Grid View ===== */
+.rb-thumb.active img {
+  outline: 3px solid #6c757d; /* אפור bootstrap-ish */
+  outline-offset: 2px;
+}
+
+
+.rb-thumb img {
+  cursor: pointer;
+} 
+
+/* exhibition modal */
+
+.rb-modal-90 {
+  width: 90vw;
+  max-width: 90vw;
+}
+
+#photoModal .modal-content {
+  border: 0;
+}
+
+#photoModal .modal-body {
+  height: 90vh;
+}
+
+#photoModal #modalImg {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+}
+
+/* Optional: hover effect */
+.rb-thumb img {
+  transition: transform .15s ease, opacity .15s ease;
+}
+.rb-thumb:hover img {
+  transform: scale(1.02);
 }
