@@ -60,16 +60,23 @@ html, body {
 
 /* MAIN CAROUSEL: full-bleed */
 #mainCarousel .carousel-image {
-  /* width: auto%; */
-  max-width: 90%;
-  max-height: none;    /* important: don't cap width-driven scaling */
-  width: 80%;
-  height: 65vh;      /* smaller */
-  object-fit: cover;
-  margin: 0 auto;           /* no centering margins */
-  padding: 1rem 0;        /* remove inner padding */
   display: block;
+  max-width: 95%;
+  max-height: 85vh;   /* limit height relative to viewport */
+  width: auto;
+  height: auto;
+  object-fit: contain;  /* keep full image, no crop */
+  margin: 0 auto;
 }
+
+  /* ===== Main Carousel Frame ===== */
+#mainCarousel .main-carousel-frame {
+  display: inline-block;   /* shrink-wrap to image width */
+}
+
+
+
+
 
 
 /* ===== Footer ===== */
@@ -123,23 +130,13 @@ footer {
   padding: 20px;
 }
 
-/* ===== Main Carousel Frame ===== */
-#mainCarousel .main-carousel-frame {
-  display: inline-block;   /* shrink-wrap to image width */
-}
-
-#mainCarousel .carousel-image {
-  display: block;
-  max-width: 95%;
-  height: auto;
-}
-
 
 /* ===== Responsive ===== */
 
 @media (max-width: 576px) {
   .carousel-image {
     max-width: 95%;
+    max-height: 95%;
   }
 
   .photo-box-sqr {
