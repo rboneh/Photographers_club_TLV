@@ -16,39 +16,53 @@
                                     <h2 class="mb-4 text-center">
                                         <%= exhibitionName %>
                                     </h2>
-                                    <p class="h5 text-end mx-1">
+                                    <p class="h4 text-end mx-1">
                                         <%= exhibitionAbout %>
                                     </p>
                                 </div>
 
 
 
-                                <!-- exhibition pictures grid -->
-                                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xxl-4 g-3">
-                                    <% exhibitionPhotosArr.forEach((exhibitionPhoto, index)=> {
-                                        const imgSrc = exhibitionPhoto.picture ?? "/pictures/img_avatar3.png"; //
-                                        const memberName = exhibitionPhoto.name ?? "";
-                                        const memberAbout = exhibitionPhoto.about ?? "";
-                                        %>
+                                <!-- exhibition pictures grid per member -->
+                                <% exhibitionObj.membersArr.forEach(member=> { %>
 
-                                        <div class="col">
-                                            <button type="button" class="btn p-0 border-0 w-100 rb-thumb"
-                                                data-member-name="<%= memberName %>"
-                                                data-member-about="<%= memberAbout %>" data-img-src="<%= imgSrc %>"
-                                                aria-label="צילום מאת <%= memberName %>">
-                                                <img src="<%= imgSrc %>" class="img-fluid rounded shadow-sm w-100"
-                                                    loading="lazy" alt="צילום מאת <%= memberName %>">
-                                            </button>
+                                    <div class="container-fluid  py-4">
+                                        <div class="container-fluid  py-3">
+                                            <h3 class="mb-3 text-center handwriting-hebrew">
+                                                <%= member.name %>
+                                            </h3>
+
+                                            <% if (member.about) { %>
+                                                <p class="h4 text-center pb-4 opacity-75">
+                                                    <%= member.about %>
+                                                </p>
                                         </div>
+                                        <% } %>
 
-                                        <% }) %>
-                                </div>
-            </div>
+                                            <div class="masonry masonry-4">
+                                                <% member.photos.forEach(photo=> { %>
 
+                                                    <div class="masonry-item">
+                                                        <button type="button" class="btn p-0 border-0 w-100 rb-thumb"
+                                                            data-member-name="<%= member.name %>"
+                                                            data-member-about="<%= member.about || '' %>"
+                                                            data-img-src="<%= photo.picture %>"
+                                                            aria-label="צילום מאת <%= member.name %>">
 
-            <div id="memberInfo" class="d-flex flex-column justify-content-center mt-4 text-center">
-                <h2 id="memberName" class="handwriting-hebrew"></h2>
-                <p class="h5 text-end mx-1" id="memberAbout"></p>
+                                                            <img src="<%= photo.picture %>"
+                                                                class="img-fluid rounded shadow-sm w-100" loading="lazy"
+                                                                alt="צילום מאת <%= member.name %>">
+                                                        </button>
+                                                    </div>
+
+                                                    <% }) %>
+                                            </div>
+                                    </div>
+
+                                    <hr class="border-secondary opacity-25 my-4">
+
+                                    <% }) %>
+
             </div>
 
             <!-- ✅ JSON-LD schema (Google) -->
@@ -91,80 +105,35 @@
 
 
         <script>
-            const grid = document.querySelector(".row.g-3");
-            const nameEl = document.getElementById("memberName");
-            const aboutEl = document.getElementById("memberAbout");
-
-            const previewImg = document.getElementById("previewImg");
             const modalImg = document.getElementById("modalImg");
-
             const modalEl = document.getElementById("photoModal");
             const photoModal = modalEl ? new bootstrap.Modal(modalEl) : null;
-
-            function updateMemberInfoFromBtn(btn) {
-                nameEl.textContent = btn?.dataset?.memberName || "";
-                aboutEl.textContent = btn?.dataset?.memberAbout || "";
-            }
-
-            function setPreviewFromBtn(btn) {
-                const src = btn?.dataset?.imgSrc;
-                if (previewImg && src) {
-                    previewImg.src = src;
-                    previewImg.alt = btn?.dataset?.memberName ? `צילום מאת ${btn.dataset.memberName}` : "";
-                }
-                updateMemberInfoFromBtn(btn);
-            }
 
             function setModalFromBtn(btn) {
                 const src = btn?.dataset?.imgSrc;
                 if (modalImg && src) {
                     modalImg.src = src;
-                    modalImg.alt = btn?.dataset?.memberName ? `צילום מאת ${btn.dataset.memberName}` : "";
+                    modalImg.alt = btn.dataset.memberName ? `צילום מאת ${btn.dataset.memberName}` : "";
                 }
             }
 
-            if (grid && nameEl && aboutEl) {
-                // initial
-                const first = grid.querySelector(".rb-thumb");
-                if (first) {
-                    setPreviewFromBtn(first);
-                    first.classList.add("active");
-                }
+            // Click anywhere on a thumbnail opens modal (works for all member grids)
+            document.addEventListener("click", (e) => {
+                const btn = e.target.closest(".rb-thumb");
+                if (!btn) return;
 
-                // click
-                grid.addEventListener("click", (e) => {
-                    const btn = e.target.closest(".rb-thumb");
-                    if (!btn) return;
+                // optional: toggle "active" class for your animation/state
+                document.querySelectorAll(".rb-thumb.active").forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
 
-                    grid.querySelectorAll(".rb-thumb.active").forEach(b => b.classList.remove("active"));
-                    btn.classList.add("active");
-
-                    setPreviewFromBtn(btn);    // keep member info synced
-                    setModalFromBtn(btn);
-
-                    if (photoModal) photoModal.show();
-                });
-            }
-
-
+                setModalFromBtn(btn);
+                if (photoModal) photoModal.show();
+            });
         </script>
 
-        <script src="https://unpkg.com/imagesloaded@5/imagesloaded.pkgd.min.js"></script>
-        <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
-        <script>
-            // Initialize Masonry after all images have loaded
-            const gridElement = document.querySelector('.row.g-3');
-            if (gridElement) {
-                imagesLoaded(gridElement, function () {
-                    new Masonry(gridElement, {
-                        itemSelector: '.col',
-                        percentPosition: true,
-                        gutter: 16
-                    });
-                });
-            }
-        </script>
-        
+
+
+
         </body>
 
         </html>

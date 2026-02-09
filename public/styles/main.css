@@ -187,3 +187,18 @@ footer {
 .rb-thumb:hover img {
   transform: scale(1.02);
 }
+
+/* exhibition page grid view */
+.masonry {
+  column-gap: 16px;
+}
+
+.masonry.masonry-4 { column-count: 4; }
+@media (max-width: 1200px) { .masonry.masonry-4 { column-count: 3; } }
+@media (max-width: 768px)  { .masonry.masonry-4 { column-count: 2; } }
+@media (max-width: 576px)  { .masonry.masonry-4 { column-count: 1; } }
+
+.masonry-item {
+  break-inside: avoid;
+  margin-bottom: 16px;
+}

@@ -296,7 +296,27 @@ function parseMemberTxt(text) {
 }
 
 /**
- * 
+ * Generate exhibitionsDB4Carousel - a simplified version of exhibitionsDB with only the info needed for the carousel and exhibition page
+ * Each exhibition object in exhibitionsDB4Carousel includes:
+ * - exhibitionName: from info.txt (or directory name if no info.txt)
+ * - exhibitionAbout: from info.txt (or empty string if no info.txt)
+ * - exhibitionPhotosArr: array of photo objects for this exhibition, each with name, about, picture
+ * exhibitionsDB4Carousel structure:
+ * {
+ *   "exhibition1Key": {
+ *     exhibitionName: "Exhibition 1",
+ *     exhibitionAbout: "About Exhibition 1",
+ *     exhibitionPhotosArr: [
+ *       {
+ *         name: "Member Name",
+ *         about: "Member About",
+ *         picture: "/path/to/photo.jpg"
+ *       },
+ *       ...
+ *     ]
+ *   },
+ *   ...
+ * }
  * @param {*} exhibistinsDB 
  * @returns 
  */
@@ -319,6 +339,69 @@ export function genExhibitsionsDB4Carousel(exhibistinsDB){
 
   }
   return exhibitionsCarouselDB;
+}
+
+
+export function genExhibitsionsDB4Grid(exhibitionsDB4Carousel) {
+  console.log("\n\nGenerating exhibitionsDB4Grid...");
+  const exhibitionsDB4Grid = exhibitionsDB4Carousel; // No copy.. Just for readability. We will add membersArr to each exhibition object in place.
+
+
+  for(let key in exhibitionsDB4Grid) {
+  const exhibition = exhibitionsDB4Grid[key];
+  const photosArr = exhibition.exhibitionPhotosArr;
+  const membersArr = buildMembers(photosArr);
+  exhibition.membersArr = membersArr;
+}
+
+   return exhibitionsDB4Grid;
+}
+
+/**
+ * Build members array from exhibition photos array grid version
+ * Each member object includes:
+ * - name: member name from exhibition photos array
+ * - about: member about from exhibition photos array
+ * - photos: array of photo objects for this member, each with picture URL
+ * members array structure:
+ * [
+ *   {
+ *     name: "Member Name",
+ *     about: "Member About",
+ *     photos: [
+ *       {
+ *         picture: "/path/to/photo.jpg"
+ *       },
+ *       ...
+ *     ]
+ *   },
+ *   ...
+ * ]
+ * @param {Array} exhibitionPhotosArr - array of exhibition photo objects
+ * @returns {Array} members - array of member objects
+ */
+export function buildMembers(exhibitionPhotosArr = []) {
+  const map = new Map();
+
+  for (const p of exhibitionPhotosArr) {
+    const name = (p.name || "").trim() || "חבר ללא שם";
+    const about = (p.about || "").trim();
+
+    if (!map.has(name)) {
+      map.set(name, { name, about, photos: [] });
+    } else {
+      // אם כבר יש about ריק ונכנס חדש לא ריק — נשמור אותו
+      const m = map.get(name);
+      if (!m.about && about) m.about = about;
+    }
+
+    map.get(name).photos.push({
+      picture: p.picture || "/pictures/img_avatar3.png",
+      // אפשר להוסיף meta בעתיד: title, year, camera, etc
+    });
+  }
+
+  return Array.from(map.values());
 }
 
 
