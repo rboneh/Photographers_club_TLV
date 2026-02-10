@@ -21,11 +21,19 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // ---------- App setup ----------
+
+/**
+ * Helmet configuration - set Content Security Policy (CSP) to allow resources only from trusted sources
+ * This helps prevent XSS and other attacks by restricting where resources can be loaded from
+ * Adjust the directives as needed based on your actual resource usage (e.g. if you add new CDNs or APIs)
+ */
 app.use(helmet()); // security middleware - set various HTTP headers for security
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
       defaultSrc: ["'self'"],
+
+      connectSrc: ["'self'", "https://cdn.jsdelivr.net"],
 
       styleSrc: [
         "'self'",
