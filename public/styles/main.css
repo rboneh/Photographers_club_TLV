@@ -61,8 +61,8 @@ html, body {
 /* MAIN CAROUSEL: full-bleed */
 #mainCarousel .carousel-image {
   display: block;
-  max-width: 95%;
-  max-height: 85vh;   /* limit height relative to viewport */
+  max-width: 90%;
+  max-height: 75vh;   /* limit height relative to viewport */
   width: auto;
   height: auto;
   object-fit: contain;  /* keep full image, no crop */

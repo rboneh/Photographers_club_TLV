@@ -14,6 +14,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 console.log("__dirname:", __dirname);
 
 const membersDir = path.join(__dirname, "public", "members");
+const photoPoolDir = path.join(__dirname, "public", "photo_pool");
 const exhibitionDir = path.join(__dirname, "public", "exhibitions");
 const resend = new Resend(process.env.RESEND_API_KEY); // for email sending (if needed)
 
@@ -93,9 +94,11 @@ const safeReadDirNames = async (dirPath) => {
 const init = async () => {
   // lists
   const membersList = await safeReadDirNames(membersDir);
+  const photoPoolList = await safeReadDirNames(photoPoolDir);
   const exhibitionsList = await safeReadDirNames(exhibitionDir);
 
   console.log("membersList:", membersList);
+  console.log("photoPoolList:", photoPoolList);
   console.log("exhibitionsList:", exhibitionsList);
 
   
@@ -133,6 +136,7 @@ const init = async () => {
    * ]
    */
   const membersDB = u.genMembersDB(membersList, membersDir);
+  const photoPoolDB = u.genMembersDB(photoPoolList, photoPoolDir);
   console.log("membersDB size:", membersDB.length);
 
   /**
@@ -156,6 +160,9 @@ const init = async () => {
   const membersPhotosArr4Carousel = u.genMembersPhotosArr(membersDir);
   console.log("membersPhotosArr4Carousel size:", membersPhotosArr4Carousel.length);
 
+  const photoPoolPhotosArr4Carousel = u.genMembersPhotosArr(photoPoolDir);
+  console.log("photoPoolPhotosArr4Carousel size:", photoPoolPhotosArr4Carousel.length);
+
   // exhibitionsDB (now exhibitionsList is ready) for use to create exhibition page
   const exhibitionsDB = u.genExhibitionsDB(exhibitionsList, exhibitionDir);
   console.log("exhibitionsDB size:", Object.keys(exhibitionsDB).length);
@@ -178,7 +185,7 @@ console.log("exhibitionsDB4Grid size:", Object.keys(exhibitionsDB4Grid).length);
 
   // ---------- Routes ------------------------------------------------
   app.get(["/", "/home"], (req, res) => {
-    const shuffeldPhotoObjArr = u.shuffleArray([...membersPhotosArr4Carousel]); // avoid mutating original
+    const shuffeldPhotoObjArr = u.shuffleArray([...photoPoolPhotosArr4Carousel]); // avoid mutating original
     res.render("pages/index.ejs", {
       membersPhotos: null,
       picturesList: null,
