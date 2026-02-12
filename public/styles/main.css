@@ -1,6 +1,7 @@
 /* ===== Global ===== */
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   direction: rtl;
@@ -20,7 +21,8 @@ html, body {
 }
 
 .navbar-nav {
-  margin-right: auto;   /* Bootstrap RTL fix */
+  margin-right: auto;
+  /* Bootstrap RTL fix */
 }
 
 .navbar-nav .nav-item {
@@ -40,6 +42,7 @@ html, body {
   /* font-weight: 400; */
   font-style: normal;
 }
+
 /* ===== Carousel ===== */
 
 .rb-carousel-item {
@@ -62,19 +65,45 @@ html, body {
 #mainCarousel .carousel-image {
   display: block;
   max-width: 90%;
-  max-height: 75vh;   /* limit height relative to viewport */
+  max-height: 75vh;
+  /* limit height relative to viewport */
   width: auto;
   height: auto;
-  object-fit: contain;  /* keep full image, no crop */
+  object-fit: contain;
+  /* keep full image, no crop */
   margin: 0 auto;
 }
 
-  /* ===== Main Carousel Frame ===== */
-#mainCarousel .main-carousel-frame {
-  display: inline-block;   /* shrink-wrap to image width */
+#memberCarousel .carousel-image {
+  display: block;
+  max-width: 90%;
+  max-height: 50vh;
+  /* limit height relative to viewport */
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  /* keep full image, no crop */
+  margin: 0 auto;
 }
 
 
+/* ===== Main Carousel Frame ===== */
+
+.main-carousel-frame {
+  display: inline-block;
+  /* shrink-wrap to image width */
+}
+
+
+
+/* ===== Carousel Controls To make arrows always visiable===== */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  background-color: rgba(0, 0, 0, 0.5);
+  /* רקע כהה חצי שקוף */
+  border-radius: 50%;
+  padding: 20px;
+}
 
 
 
@@ -95,7 +124,8 @@ footer {
 /*id unified square */
 
 .photo-box-sqr {
-  width: 280px;           /* דסקטופ */
+  width: 280px;
+  /* דסקטופ */
   aspect-ratio: 1 / 1;
   overflow: hidden;
   border-radius: 0.5rem;
@@ -119,15 +149,7 @@ footer {
 
 .card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 10px 25px rgba(0,0,0,.4);
-}
-
-/* ===== Carousel Controls To make arrows always visiable===== */
-.carousel-control-prev-icon,
-.carousel-control-next-icon {
-  background-color: rgba(0, 0, 0, 0.5); /* רקע כהה חצי שקוף */
-  border-radius: 50%;
-  padding: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, .4);
 }
 
 
@@ -140,21 +162,23 @@ footer {
   }
 
   .photo-box-sqr {
-    width: 220px;   /* מובייל */
+    width: 220px;
+    /* מובייל */
   }
 }
 
 
 /* ===== Exhibition Page Grid View ===== */
 .rb-thumb.active img {
-  outline: 3px solid #6c757d; /* אפור bootstrap-ish */
+  outline: 3px solid #6c757d;
+  /* אפור bootstrap-ish */
   outline-offset: 2px;
 }
 
 
 .rb-thumb img {
   cursor: pointer;
-} 
+}
 
 /* exhibition modal */
 
@@ -181,21 +205,41 @@ footer {
 .rb-thumb img {
   transition: transform .15s ease, opacity .15s ease;
 }
+
 .rb-thumb:hover img {
   transform: scale(1.02);
 }
 
+
 /* exhibition page grid view */
 .masonry {
-  column-gap: 16px;
+  display: grid;
+  gap: 16px;
+  justify-content: center;
+  /* מרכז את הגריד */
+  grid-template-columns: repeat(4, minmax(0, 260px));
+  /* רוחב עמודה קבוע-ish */
 }
 
-.masonry.masonry-4 { column-count: 4; }
-@media (max-width: 1200px) { .masonry.masonry-4 { column-count: 3; } }
-@media (max-width: 768px)  { .masonry.masonry-4 { column-count: 2; } }
-@media (max-width: 576px)  { .masonry.masonry-4 { column-count: 1; } }
+@media (max-width: 1200px) {
+  .masonry {
+    grid-template-columns: repeat(3, minmax(0, 260px));
+  }
+}
+
+@media (max-width: 768px) {
+  .masonry {
+    grid-template-columns: repeat(2, minmax(0, 260px));
+  }
+}
+
+@media (max-width: 576px) {
+  .masonry {
+    grid-template-columns: 1fr;
+  }
+}
 
 .masonry-item {
-  break-inside: avoid;
-  margin-bottom: 16px;
+  margin: 0;
+  /* לא צריך margin-bottom כי gap עושה את זה */
 }

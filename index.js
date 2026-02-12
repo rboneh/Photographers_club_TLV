@@ -234,7 +234,7 @@ console.log("exhibitionsDB4Grid size:", Object.keys(exhibitionsDB4Grid).length);
       return res.status(404).send("Member not found");
     }
 
-    res.render("pages/member-page.ejs", {
+    res.render("pages/member-page-grid.ejs", {
       member: member,
       pageTitle: `${member.memberName} | מועדון הצילום תל אביב`,
       pageDescription: member.memberAbout,

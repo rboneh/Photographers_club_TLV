@@ -25,7 +25,8 @@
                                     <% memberPhotos.forEach((picture, index)=> { %>
                                         <div class="carousel-item rb-carousel-item <%= index === 0 ? 'active' : '' %>">
                                             <div class="d-flex justify-content-center">
-                                                <img src="<%= picture %>" loading="lazy" alt="צילום של <%= name %>"  class="carousel-image">
+                                                <img src="<%= picture %>" loading="lazy" alt="צילום של <%= name %>"
+                                                    class="carousel-image">
                                             </div>
                                         </div>
 
@@ -44,12 +45,27 @@
                                 </button>
                             </div>
 
-                            <div class="d-flex justify-content-center mt-4">
+                            <div class="d-flex justify-content-center mt-4 mb-5">
                                 <a href="/members" class="btn btn-outline-light">חזרה לחברים</a>
                             </div>
 
-                            <% } else { %>
 
+
+                            <!-- exhibition pictures grid per member -->
+
+                            <div class="masonry masonry-4">
+                                <% memberPhotos.forEach(photo=> { %>
+                                    <div class="masonry-item">
+                                        <button type="button" class="btn p-0 border-0 w-100 rb-thumb"
+                                            data-img-src="<%= photo %>" data-member-name="<%= name %>"
+                                            aria-label="צילום מאת <%= name %>">
+                                            <img src="<%= photo %>" class="img-fluid rounded shadow-sm w-100"
+                                                loading="lazy" alt="צילום מאת <%= name %>">
+                                        </button>
+                                    </div>
+                                    <% }) %>
+                            </div>
+                            <% } else { %>
                                 <p class="text-center">חבר לא נמצא.</p>
                                 <% } %>
             </div>
@@ -58,7 +74,47 @@
         <%- include('../partials/footer') %>
 
     </div>
+    <div class="modal fade" id="photoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered rb-modal-90">
+            <div class="modal-content bg-dark">
+                <button type="button" class="btn-close btn-close-white ms-auto m-2" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
 
+                <div class="modal-body p-0 d-flex justify-content-center align-items-center">
+                    <img id="modalImg" class="img-fluid" alt="">
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script>
+        const modalImg = document.getElementById("modalImg");
+        const modalEl = document.getElementById("photoModal");
+        const photoModal = modalEl ? new bootstrap.Modal(modalEl) : null;
+
+        function setModalFromBtn(btn) {
+            const src = btn?.dataset?.imgSrc;
+            if (modalImg && src) {
+                modalImg.src = src;
+                modalImg.alt = `צילום מאת ${name}`;
+            }
+        }
+
+        // Click anywhere on a thumbnail opens modal (works for all member grids)
+        document.addEventListener("click", (e) => {
+            const btn = e.target.closest(".rb-thumb");
+            if (!btn) return;
+
+            // optional: toggle "active" class for your animation/state
+            document.querySelectorAll(".rb-thumb.active").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+
+            setModalFromBtn(btn);
+            if (photoModal) photoModal.show();
+        });
+    </script>
     </body>
 
     </html>

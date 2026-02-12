@@ -16,9 +16,10 @@
                                     <h2 class="mb-4 text-center">
                                         <%= exhibitionName %>
                                     </h2>
-                                    <p class="h4 text-end mx-1">
-                                        <%= exhibitionAbout %>
-                                    </p>
+                                    <div class="h4 text-center mx-4">
+                                        <%- exhibitionAbout %>
+                                    </div>
+                                    
                                 </div>
 
 
@@ -27,7 +28,7 @@
                                 <% exhibitionObj.membersArr.forEach(member=> { %>
 
                                     <div class="container-fluid  py-4">
-                                        <div class="container-fluid  py-3">
+                                        <div class="container  py-3">
                                             <h3 class="mb-3 text-center handwriting-hebrew">
                                                 <%= member.name %>
                                             </h3>
