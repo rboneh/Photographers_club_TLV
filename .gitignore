@@ -145,3 +145,5 @@ Webpack/*
 
 #Project specific
 blog-*
+*.pptx
+extracted.*
