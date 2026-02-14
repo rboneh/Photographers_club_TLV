@@ -74,6 +74,18 @@ body {
   margin: 0 auto;
 }
 
+#smallMainCarousel .carousel-image {
+  display: block;
+  max-width: 90%;
+  max-height: 75vh;
+  /* limit height relative to viewport */
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  /* keep full image, no crop */
+  margin: 0 auto;
+}
+
 #memberCarousel .carousel-image {
   display: block;
   max-width: 90%;
@@ -217,19 +229,20 @@ footer {
   gap: 16px;
   justify-content: center;
   /* מרכז את הגריד */
-  grid-template-columns: repeat(4, minmax(0, 260px));
+  grid-template-columns: repeat(4, minmax(0, 340px));
   /* רוחב עמודה קבוע-ish */
+  grid-template-rows: masonry;
 }
 
 @media (max-width: 1200px) {
   .masonry {
-    grid-template-columns: repeat(3, minmax(0, 260px));
+    grid-template-columns: repeat(3, minmax(0, 340px));
   }
 }
 
 @media (max-width: 768px) {
   .masonry {
-    grid-template-columns: repeat(2, minmax(0, 260px));
+    grid-template-columns: repeat(2, minmax(0, 340px));
   }
 }
 
