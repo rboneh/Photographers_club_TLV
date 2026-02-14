@@ -147,3 +147,4 @@ Webpack/*
 blog-*
 *.pptx
 public/exhibitions/**/extracted/
+fly.toml
