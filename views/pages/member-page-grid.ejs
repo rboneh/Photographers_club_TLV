@@ -53,18 +53,21 @@
 
                             <!-- exhibition pictures grid per member -->
 
-                            <div class="masonry masonry-4">
-                                <% memberPhotos.forEach(photo=> { %>
-                                    <div class="masonry-item">
-                                        <button type="button" class="btn p-0 border-0 w-100 rb-thumb"
-                                            data-img-src="<%= photo %>" data-member-name="<%= name %>"
-                                            aria-label="צילום מאת <%= name %>">
-                                            <img src="<%= photo %>" class="img-fluid rounded shadow-sm w-100"
-                                                loading="lazy" alt="צילום מאת <%= name %>">
-                                        </button>
-                                    </div>
-                                    <% }) %>
+                            <div class="masonry-wrapper">
+                                <div class="masonry <%= memberPhotos.length <= 3 ? 'few' : 'many' %>">
+                                    <% memberPhotos.forEach(photo=> { %>
+                                        <div class="masonry-item">
+                                            <button type="button" class="btn p-0 border-0 rb-thumb"
+                                                data-img-src="<%= photo %>" data-member-name="<%= name %>"
+                                                aria-label="צילום מאת <%= name %>">
+                                                <img src="<%= photo %>" class="img-fluid rounded shadow-sm"
+                                                    loading="lazy" alt="צילום מאת <%= name %>">
+                                            </button>
+                                        </div>
+                                        <% }) %>
+                                </div>
                             </div>
+
                             <% } else { %>
                                 <p class="text-center">חבר לא נמצא.</p>
                                 <% } %>

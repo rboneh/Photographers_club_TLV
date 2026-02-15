@@ -19,7 +19,7 @@
                                     <div class="h4 text-center mx-4">
                                         <%- exhibitionAbout %>
                                     </div>
-                                    
+
                                 </div>
 
 
@@ -27,8 +27,8 @@
                                 <!-- exhibition pictures grid per member -->
                                 <% exhibitionObj.membersArr.forEach(member=> { %>
 
-                                    <div class="container-fluid  py-4">
-                                        <div class="container  py-3">
+                                    <div class="container-fluid py-4">
+                                        <div class="container py-3">
                                             <h3 class="mb-3 text-center handwriting-hebrew">
                                                 <%= member.name %>
                                             </h3>
@@ -37,28 +37,32 @@
                                                 <p class="h4 text-center pb-4 opacity-75">
                                                     <%= member.about %>
                                                 </p>
-                                        </div>
-                                        <% } %>
+                                                <% } %>
 
-                                            <div class="masonry masonry-4">
-                                                <% member.photos.forEach(photo=> { %>
+                                                    <div class="masonry-wrapper">
+                                                        <div class="masonry <%= member.photos.length <= 3 ? 'few' : 'many' %>">
+                                                            <% member.photos.forEach(photo=> { %>
+                                                                <div class="masonry-item">
+                                                                    <button type="button"
+                                                                        class="btn p-0 border-0 rb-thumb"
+                                                                        data-member-name="<%= member.name %>"
+                                                                        data-member-about="<%= member.about || '' %>"
+                                                                        data-img-src="<%= photo.picture %>"
+                                                                        aria-label="צילום מאת <%= member.name %>">
 
-                                                    <div class="masonry-item">
-                                                        <button type="button" class="btn p-0 border-0 w-100 rb-thumb"
-                                                            data-member-name="<%= member.name %>"
-                                                            data-member-about="<%= member.about || '' %>"
-                                                            data-img-src="<%= photo.picture %>"
-                                                            aria-label="צילום מאת <%= member.name %>">
-
-                                                            <img src="<%= photo.picture %>"
-                                                                class="img-fluid rounded shadow-sm w-100" loading="lazy"
-                                                                alt="צילום מאת <%= member.name %>">
-                                                        </button>
+                                                                        <img src="<%= photo.picture %>"
+                                                                            class="img-fluid rounded shadow-sm"
+                                                                            loading="lazy"
+                                                                            alt="צילום מאת <%= member.name %>">
+                                                                    </button>
+                                                                </div>
+                                                                <% }) %>
+                                                        </div>
                                                     </div>
 
-                                                    <% }) %>
-                                            </div>
+                                        </div>
                                     </div>
+
 
                                     <hr class="border-secondary opacity-25 my-4">
 

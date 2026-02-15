@@ -224,35 +224,57 @@ footer {
 
 
 /* exhibition page grid view */
-.masonry {
-  display: grid;
-  gap: 16px;
+/* Masonry via CSS columns (real masonry, no fake rows) */
+.masonry-wrapper{
+  width: 100%;
+  display: flex;
   justify-content: center;
-  /* מרכז את הגריד */
-  grid-template-columns: repeat(4, minmax(0, 340px));
-  /* רוחב עמודה קבוע-ish */
-  grid-template-rows: masonry;
 }
 
-@media (max-width: 1200px) {
-  .masonry {
-    grid-template-columns: repeat(3, minmax(0, 340px));
-  }
+.masonry{
+  display: inline-block;   /* הכי חשוב: שלא יתפוס 100% */
+  width: auto;             /* לוודא שאין 100% בירושה */
+  max-width: 100%;
+
+  column-width: 260px;
+  column-gap: 16px;
+
+  /* אופציונלי: אם RTL “מבלגן” לך את תחילת העמודות */
+  /* direction: ltr; */
 }
 
-@media (max-width: 768px) {
-  .masonry {
-    grid-template-columns: repeat(2, minmax(0, 340px));
-  }
+/* ===== Few items: perfect centering ===== */
+.masonry.few{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+
+  /* allow up to 3 centered columns */
+  width: min(100%, calc(3 * 260px + 2 * 16px));
 }
 
-@media (max-width: 576px) {
-  .masonry {
-    grid-template-columns: 1fr;
-  }
+
+/* ===== Many items: real masonry ===== */
+.masonry.many{
+  display: inline-block;
+  column-width: 260px;
+  column-gap: 16px;
+  max-width: 100%;
 }
 
-.masonry-item {
-  margin: 0;
-  /* לא צריך margin-bottom כי gap עושה את זה */
+
+.masonry-item{
+  break-inside: avoid;
+  margin: 0 0 16px;
+}
+
+.masonry-item .rb-thumb{
+  display: block;
+  width: 100%;
+}
+
+.masonry-item img{
+  display: block;
+  width: 100%;
+  height: auto;
 }
