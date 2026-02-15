@@ -4,14 +4,14 @@
 #
 
 app = '20-1-photographers-club-tlv'
-primary_region = 'fra'
+primary_region = 'ams'
 
 [build]
 
 [http_service]
   internal_port = 3000
   force_https = true
-  auto_stop_machines = 'stop'
+  auto_stop_machines = true
   auto_start_machines = true
   min_machines_running = 0
   processes = ['app']
