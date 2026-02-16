@@ -9,6 +9,8 @@ import helmet from "helmet"; // security middleware
 
 import * as u from "./public/utilities.js"; // custom utilities
 
+
+
 // __dirname setup for ES modules
 const __dirname = dirname(fileURLToPath(import.meta.url));
 console.log("__dirname:", __dirname);
@@ -17,6 +19,10 @@ const membersDir = path.join(__dirname, "public", "members");
 const photoPoolDir = path.join(__dirname, "public", "photo_pool");
 const exhibitionDir = path.join(__dirname, "public", "exhibitions");
 const resend = new Resend(process.env.RESEND_API_KEY); // for email sending (if needed)
+
+const baseUrl =
+  process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
+
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -101,7 +107,7 @@ const init = async () => {
   console.log("photoPoolList:", photoPoolList);
   console.log("exhibitionsList:", exhibitionsList);
 
-  
+
   // photos
   // const membersPhotos = u.getFiles(membersDir); //getFiles is synchronous read. Need to be change to async. 
   // console.log("Members Photos count:", membersPhotos.length);
@@ -169,9 +175,9 @@ const init = async () => {
 
   const exhibitionsDB4Carousel = u.genExhibitsionsDB4Carousel(exhibitionsDB);
   console.log("exhibitionsDB4Carousel size:", Object.keys(exhibitionsDB4Carousel).length);
-  
-const exhibitionsDB4Grid = u.genExhibitsionsDB4Grid(exhibitionsDB4Carousel);
-console.log("exhibitionsDB4Grid size:", Object.keys(exhibitionsDB4Grid).length);
+
+  const exhibitionsDB4Grid = u.genExhibitsionsDB4Grid(exhibitionsDB4Carousel);
+  console.log("exhibitionsDB4Grid size:", Object.keys(exhibitionsDB4Grid).length);
 
   // make exhibitionsList available to all EJS views
   app.use((req, res, next) => {
@@ -180,7 +186,17 @@ console.log("exhibitionsDB4Grid size:", Object.keys(exhibitionsDB4Grid).length);
     next();
   });
 
+  app.use((req, res, next) => {
+  res.locals.pageTitle = res.locals.pageTitle || "מועדון הצילום תל אביב";
+  res.locals.pageDescription = res.locals.pageDescription || "מועדון צילום תל אביב – קהילה של צלמים, תערוכות ותיקי עבודות.";
+  next();
+});
 
+  app.use((req, res, next) => {
+    res.locals.baseUrl = baseUrl;
+    res.locals.canonicalPath = req.path;
+    next();
+  });
 
 
   // ---------- Routes ------------------------------------------------

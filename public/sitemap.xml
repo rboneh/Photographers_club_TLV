@@ -2,15 +2,16 @@
 <urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
 
   <url>
-    <loc>https://photographers-club-tlv.onrender.com/</loc>
+    <loc>https://20-1-photographers-club-tlv.fly.dev/</loc>
   </url>
 
   <url>
-    <loc>https://photographers-club-tlv.onrender.com/members</loc>
+    <loc>https://20-1-photographers-club-tlv.fly.dev/about</loc>
   </url>
 
   <url>
-    <loc>https://photographers-club-tlv.onrender.com/about</loc>
+    <loc>https://20-1-photographers-club-tlv.fly.dev/members</loc>
   </url>
+
 
 </urlset>

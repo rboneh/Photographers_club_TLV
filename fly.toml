@@ -20,3 +20,7 @@ primary_region = 'ams'
   memory = '256mb'
   cpus = 1
   memory_mb = 256
+
+[env]
+  BASE_URL = "https://20-1-photographers-club-tlv.fly.dev"
+

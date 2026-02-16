@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://photographers-club-tlv.onrender.com/sitemap.xml
+Sitemap: https://20-1-photographers-club-tlv.fly.dev/sitemap.xml
