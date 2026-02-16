@@ -35,6 +35,9 @@ body {
   display: inline-block;
 }
 
+.about-text {
+  white-space: pre-line;
+}
 
 .handwriting-hebrew {
   font-family: "Playpen Sans Hebrew", cursive;

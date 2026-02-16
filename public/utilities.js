@@ -417,6 +417,7 @@ export function genExhibitionPhotosArr(dir, files = []) {
   const fileList = fs.readdirSync(dir);
 
   // ---- leaf detection ----
+
   const hasSubDirs = fileList.some((file) => {
     if (file.includes(".DS_Store")) return false;
     const fullPath = path.join(dir, file);
@@ -435,13 +436,28 @@ export function genExhibitionPhotosArr(dir, files = []) {
     const content = fs.readFileSync(memberTxtPath, "utf8");
 
     let memberName = "";
-    let memberAbout = "";
+let memberAbout = "";
+let collectingAbout = false;
 
-    for (const rawLine of content.split(/\r?\n/)) {
-      const line = rawLine.trim();
-      if (line.startsWith("שם:")) memberName = line.replace("שם:", "").trim();
-      else if (line.startsWith("אודות:")) memberAbout = line.replace("אודות:", "").trim();
-    }
+for (const rawLine of content.split(/\r?\n/)) {
+
+  if (rawLine.startsWith("שם:")) {
+    memberName = rawLine.replace("שם:", "").trim();
+    collectingAbout = false;
+    continue;
+  }
+
+  if (rawLine.startsWith("אודות:")) {
+    memberAbout = rawLine.replace("אודות:", "").trim();
+    collectingAbout = true;
+    continue;
+  }
+
+  if (collectingAbout) {
+    memberAbout += "\n" + rawLine.trim();
+  }
+}
+
 
     // collect jpg/jpeg in this leaf
     for (const file of fileList) {

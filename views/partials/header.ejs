@@ -43,11 +43,8 @@
   <link rel="canonical" href="<%= baseUrl %><%= canonicalPath %>">
 
   <meta property="og:type" content="website">
-
-  <meta property="og:title" content="<%= pageTitle || 'מועדון הצילום תל אביב' %>">
-
-  <meta property="og:description" content="<%= pageDescription || '' %>">
-
+  <meta property="og:title" content="<%= locals.pageTitle || 'מועדון הצילום תל אביב' %>">
+  <meta property="og:description" content="<%= locals.pageDescription || '' %>">
   <meta property="og:url" content="<%= baseUrl %><%= canonicalPath %>">
 
 </head>
@@ -82,7 +79,7 @@
           </li>
           <li class="nav-item">
             <form id="membersNav" action="/members" method="GET">
-              <button class="nav-link" type="submit" aria-current="page">
+              <button class="nav-link" href="/members">
                 חברים
               </button>
             </form>
