@@ -201,7 +201,8 @@ const init = async () => {
 
   // ---------- Routes ------------------------------------------------
   app.get(["/", "/home"], (req, res) => {
-    const shuffeldPhotoObjArr = u.shuffleArray([...photoPoolPhotosArr4Carousel]); // avoid mutating original
+    const shuffeldPhotoObjArr = u.shuffleArray([...membersPhotosArr4Carousel]);
+    // const shuffeldPhotoObjArr = u.shuffleArray([...photoPoolPhotosArr4Carousel]); // avoid mutating original
     res.render("pages/index.ejs", {
       membersPhotos: null,
       picturesList: null,

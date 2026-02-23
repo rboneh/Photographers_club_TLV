@@ -46,6 +46,11 @@ body {
   font-style: normal;
 }
 
+.card-text {
+  font-size: 1.3rem;
+  color: #ffffff;
+}  
+
 /* ===== Carousel ===== */
 
 .rb-carousel-item {
@@ -258,13 +263,24 @@ footer {
 
 
 /* ===== Many items: real masonry ===== */
+
 .masonry.many{
   display: inline-block;
   column-width: 260px;
   column-gap: 16px;
   max-width: 100%;
-}
+} 
+/*
+.masonry.many{
+  display: grid;
 
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+
+  width: 100%;
+  max-width: 1200px; /* optional limit *//*
+}
+*/
 
 .masonry-item{
   break-inside: avoid;
