@@ -18,6 +18,8 @@ console.log("__dirname:", __dirname);
 const membersDir = path.join(__dirname, "public", "members");
 const photoPoolDir = path.join(__dirname, "public", "photo_pool");
 const exhibitionDir = path.join(__dirname, "public", "exhibitions");
+const aboutPicturesDirs = path.join(__dirname, "public", "about_photo_pool");
+
 const resend = new Resend(process.env.RESEND_API_KEY); // for email sending (if needed)
 
 const baseUrl =
@@ -102,10 +104,12 @@ const init = async () => {
   const membersList = await safeReadDirNames(membersDir);
   const photoPoolList = await safeReadDirNames(photoPoolDir);
   const exhibitionsList = await safeReadDirNames(exhibitionDir);
+  const aboutPicturesList = await safeReadDirNames(aboutPicturesDirs);
 
   console.log("membersList:", membersList);
   console.log("photoPoolList:", photoPoolList);
   console.log("exhibitionsList:", exhibitionsList);
+  console.log("aboutPicturesList:", aboutPicturesList);
 
 
   // photos
@@ -142,7 +146,7 @@ const init = async () => {
    * ]
    */
   const membersDB = u.genMembersDB(membersList, membersDir);
-  const photoPoolDB = u.genMembersDB(photoPoolList, photoPoolDir);
+  // const photoPoolDB = u.genMembersDB(photoPoolList, photoPoolDir);
   console.log("membersDB size:", membersDB.length);
 
   /**
@@ -168,6 +172,9 @@ const init = async () => {
 
   const photoPoolPhotosArr4Carousel = u.genMembersPhotosArr(photoPoolDir);
   console.log("photoPoolPhotosArr4Carousel size:", photoPoolPhotosArr4Carousel.length);
+
+  const aboutPicturesArr4Carousel = u.genMembersPhotosArr(aboutPicturesDirs);
+  console.log("aboutPicturesArr4Carousel size:", aboutPicturesArr4Carousel.length);
 
   // exhibitionsDB (now exhibitionsList is ready) for use to create exhibition page
   const exhibitionsDB = u.genExhibitionsDB(exhibitionsList, exhibitionDir);
@@ -208,7 +215,6 @@ const init = async () => {
       picturesList: null,
       membersPhotosArr4Carousel: shuffeldPhotoObjArr,
       exhibitionPhotos: null,
-      themeImage: "https://picsum.photos/id/91/3504/2336?random=1",
     });
   });
 
@@ -218,8 +224,8 @@ const init = async () => {
       membersPhotos: null,
       picturesDB: null,
       exhibitionPhotos: null,
-      themeImage: "https://picsum.photos/id/91/3504/2336?random=1",
-      membersDB: membersDB,
+      membersDB: null,
+      aboutPicturesArray: u.shuffleArray([...aboutPicturesArr4Carousel]),
       sent: sent,
     });
   });
@@ -234,7 +240,6 @@ const init = async () => {
       membersPhotos: null,
       picturesDB: null,
       exhibitionPhotos: null,
-      themeImage: "https://picsum.photos/id/91/3504/2336?random=1",
       membersDB: membersDB,
     });
   });
@@ -258,7 +263,6 @@ const init = async () => {
       membersPhotos: null,
       picturesDB: null,
       exhibitionPhotos: null,
-      themeImage: "https://picsum.photos/id/91/3504/2336?random=1",
       membersDB: membersDB,
     });
   });
@@ -289,7 +293,6 @@ const init = async () => {
       exhibitionPhotos: null,
       exhibitionKey: exhibitionName,
       exhibitionObj: exhibitionObj,
-      themeImage: "https://picsum.photos/id/91/800/200?random=1",
     });
   });
 

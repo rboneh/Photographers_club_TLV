@@ -5,63 +5,94 @@
 
         <main class="flex-grow-1">
             <div class="container py-5">
+                <% if (locals.aboutPicturesArray && aboutPicturesArray.length> 0) { %>
+                    <% const currentPic=aboutPicturesArray[0].picture %>
+                        <% const photographerName=aboutPicturesArray[0].name %>
+                            <% const pictureAbout=aboutPicturesArray[0].about %>
+                            
+                                <img src="<%= currentPic %>" loading="lazy" alt="<%= pictureAbout %>"
+                                    class="img-fluid mb-4 d-block mx-auto">
+                                <h5 class="text-end m-0 mt-1 handwriting-hebrew">צילום: <%= photographerName %>
+                                </h5>
+                                <% } else { %>
 
-                <img src="/pictures/XT5A3742.jpg" loading="lazy" alt="Trees Line"
-                    class="img-fluid mb-4 d-block mx-auto">
+                                    <img src="/pictures/XT5A3742-2.jpg" loading="lazy" alt="Trees Line"
+                                        class="img-fluid mb-4 d-block mx-auto">
 
-                <h1 class="mb-4 text-center">אודות מועדון הצילום תל אביב</h1>
+                                    <h5 class="text-end m-0 mt-1 handwriting-hebrew">צילום: רונן בונה</h5>
 
-                <p class=" h5 mb-4">
-                    מועדון הצילום תל אביב נוסד בשנות השמונים ופועל מאז כקהילה פעילה ומחויבת לקידום אמנות הצילום והעמקת
-                    הידע והיכולות של חבריו. המועדון מאגד כ־30 צלמים וצלמות חובבים מרקעים ומתחומי צילום מגוונים, היוצרים
-                    יחד מסגרת רצינית של למידה, יצירה ושיח מקצועי.
-                    פעילות המועדון כוללת הרצאות, סדנאות, השתלמויות, סיורי צילום ותערוכות בנושאי צילום ואמנות חזותית,
-                    בהנחיית אמנים, מרצים ואנשי מקצוע מובילים מהתחום. המועדון משמש בית מקצועי וחברתי, ומציע מרחב להצגת
-                    עבודות, לשיח יוצר, להכוונה ולהעמקת תהליכי עבודה.
-                    לצד הפעילות האמנותית מתקיימים גם מפגשים בלתי פורמליים המטפחים קהילה מגובשת, קשר אישי ומאפשרים השראה
-                    הדדית. שילוב זה יוצר סביבה תומכת ומפרה, המעודדת התפתחות אמנותית מתמשכת.
-                </p>
 
-                <h5 class="text-end">צור קשר:</h5>
+                                    </h5>
 
-                <form method="POST" action="/contact" class="mt-4" dir="rtl">
-                    <!-- honeypot anti-spam (hidden) -->
-                    <div class="d-none">
-                        <label for="website">Website</label>
-                        <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
-                    </div>
 
-                    <div class="row g-3">
-                        <div class="col-12 col-md-6">
-                            <label for="name" class="form-label">שם</label>
-                            <input id="name" name="name" class="form-control" placeholder="השם שלך" required>
-                        </div>
+                                    <% } %>
 
-                        <div class="col-12 col-md-6">
-                            <label for="email" class="form-label">אימייל</label>
-                            <input id="email" name="email" type="email" class="form-control"
-                                placeholder="name@example.com" required>
-                        </div>
 
-                        <div class="col-12">
-                            <label for="message" class="form-label">הודעה</label>
-                            <textarea id="message" name="message" class="form-control" rows="5"
-                                placeholder="כתוב/כתבי כאן את ההודעה…" required></textarea>
-                        </div>
+                                        <h1 class="mb-4 text-center">אודות מועדון הצילום תל אביב</h1>
 
-                        <div class="col-12 d-flex justify-content-center">
-                            <button id="sendBtn" type="submit" class="btn btn-primary px-5">
-                                שליחה
-                            </button>
-                        </div>
+                                        <p class=" h5 mb-4">
+                                            מועדון הצילום תל אביב נוסד בשנות השמונים ופועל מאז כקהילה פעילה ומחויבת
+                                            לקידום אמנות
+                                            הצילום והעמקת
+                                            הידע והיכולות של חבריו. המועדון מאגד כ־30 צלמים וצלמות חובבים מרקעים ומתחומי
+                                            צילום
+                                            מגוונים, היוצרים
+                                            יחד מסגרת רצינית של למידה, יצירה ושיח מקצועי.
+                                            פעילות המועדון כוללת הרצאות, סדנאות, השתלמויות, סיורי צילום ותערוכות בנושאי
+                                            צילום ואמנות
+                                            חזותית,
+                                            בהנחיית אמנים, מרצים ואנשי מקצוע מובילים מהתחום. המועדון משמש בית מקצועי
+                                            וחברתי, ומציע
+                                            מרחב להצגת
+                                            עבודות, לשיח יוצר, להכוונה ולהעמקת תהליכי עבודה.
+                                            לצד הפעילות האמנותית מתקיימים גם מפגשים בלתי פורמליים המטפחים קהילה מגובשת,
+                                            קשר אישי
+                                            ומאפשרים השראה
+                                            הדדית. שילוב זה יוצר סביבה תומכת ומפרה, המעודדת התפתחות אמנותית מתמשכת.
+                                        </p>
 
-                        <div class="col-12">
-                            <p class="small text-muted text-center mb-0">
-                                נענה בהקדם. לא נשתמש בפרטים שלך לשום מטרה אחרת.
-                            </p>
-                        </div>
-                    </div>
-                </form>
+                                        <h5 class="text-end">צור קשר:</h5>
+
+                                        <form method="POST" action="/contact" class="mt-4" dir="rtl">
+                                            <!-- honeypot anti-spam (hidden) -->
+                                            <div class="d-none">
+                                                <label for="website">Website</label>
+                                                <input id="website" name="website" type="text" tabindex="-1"
+                                                    autocomplete="off">
+                                            </div>
+
+                                            <div class="row g-3">
+                                                <div class="col-12 col-md-6">
+                                                    <label for="name" class="form-label">שם</label>
+                                                    <input id="name" name="name" class="form-control"
+                                                        placeholder="השם שלך" required>
+                                                </div>
+
+                                                <div class="col-12 col-md-6">
+                                                    <label for="email" class="form-label">אימייל</label>
+                                                    <input id="email" name="email" type="email" class="form-control"
+                                                        placeholder="name@example.com" required>
+                                                </div>
+
+                                                <div class="col-12">
+                                                    <label for="message" class="form-label">הודעה</label>
+                                                    <textarea id="message" name="message" class="form-control" rows="5"
+                                                        placeholder="כתוב/כתבי כאן את ההודעה…" required></textarea>
+                                                </div>
+
+                                                <div class="col-12 d-flex justify-content-center">
+                                                    <button id="sendBtn" type="submit" class="btn btn-primary px-5">
+                                                        שליחה
+                                                    </button>
+                                                </div>
+
+                                                <div class="col-12">
+                                                    <p class="small text-muted text-center mb-0">
+                                                        נענה בהקדם. לא נשתמש בפרטים שלך לשום מטרה אחרת.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </form>
 
 
 
