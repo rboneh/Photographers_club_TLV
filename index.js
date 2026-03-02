@@ -25,7 +25,6 @@ const resend = new Resend(process.env.RESEND_API_KEY); // for email sending (if 
 const baseUrl =
   process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
 
-
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -74,7 +73,7 @@ app.use(
   })
 );
 
-app.use(express.static(path.join(__dirname, "public"))); // static files middleware
+
 app.use(express.urlencoded({ extended: true })); // to parse form data
 
 // set EJS as templating engine 
@@ -134,7 +133,7 @@ const init = async () => {
    *     memberAbout: "Bio text...", // from info.json
    *     memberPhoto: "https://example.com/photo.jpg", // from info.json or first photo in directory
    *     memberDir: "/public/members/member1", // path to member's directory
-   *     photos: [ // array of photo objects for this member
+   *     photo s: [ // array of photo objects for this member
    *       {
    *         filename: "photo1.jpg",
    *         url: "/members/member1/photo1.jpg"
@@ -194,10 +193,10 @@ const init = async () => {
   });
 
   app.use((req, res, next) => {
-  res.locals.pageTitle = res.locals.pageTitle || "מועדון הצילום תל אביב";
-  res.locals.pageDescription = res.locals.pageDescription || "מועדון צילום תל אביב – קהילה של צלמים, תערוכות ותיקי עבודות.";
-  next();
-});
+    res.locals.pageTitle = res.locals.pageTitle || "מועדון הצילום תל אביב";
+    res.locals.pageDescription = res.locals.pageDescription || "מועדון צילום תל אביב – קהילה של צלמים, תערוכות ותיקי עבודות.";
+    next();
+  });
 
   app.use((req, res, next) => {
     res.locals.baseUrl = baseUrl;
@@ -206,7 +205,54 @@ const init = async () => {
   });
 
 
-  // ---------- Routes ------------------------------------------------
+  /** * Sitemap route - dynamically generate sitemap.xml based on current members and exhibitions
+   * This helps search engines discover all pages of the site, including member pages and exhibition pages
+   * The sitemap includes:
+   * - homepage
+   * - about page
+   * - members listing page
+   * - individual member pages (one for each member in membersDB)
+   * - exhibition pages (one for each exhibition in exhibitionsList)
+   */
+  app.get("/sitemap.xml", (req, res) => {
+
+    const origin =
+      (process.env.BASE_URL ||
+        `${(req.headers["x-forwarded-proto"] || req.protocol)}://${req.get("host")}`)
+        .replace(/\/$/, "");
+
+    const urls = [
+      `${origin}/`,
+      `${origin}/about`,
+      `${origin}/members`,
+    ];
+
+    // member pages
+    for (const m of membersDB) {
+      urls.push(`${origin}/member/${encodeURIComponent(m.key)}`);
+    }
+
+    // exhibitions pages
+    for (const exName of exhibitionsList) {
+      urls.push(
+        `${origin}/exhibitions?exhibition=${encodeURIComponent(exName)}`
+      );
+    }
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls
+        .map((url) => `<url><loc>${url}</loc></url>`)
+        .join("\n")}
+</urlset>`;
+
+    res.type("application/xml");
+    res.send(xml);
+  });
+
+
+
+  ///////////////// ---------- Routes -------------------------//////////////////////////
   app.get(["/", "/home"], (req, res) => {
     const shuffeldPhotoObjArr = u.shuffleArray([...membersPhotosArr4Carousel]);
     // const shuffeldPhotoObjArr = u.shuffleArray([...photoPoolPhotosArr4Carousel]); // avoid mutating original
@@ -230,6 +276,16 @@ const init = async () => {
     });
   });
 
+  app.get("/terms", (req, res) => {
+    const sent = req.query.sent; // "1" או "0" או undefined
+    res.render("pages/terms.ejs", {
+      membersPhotos: null,
+      picturesDB: null,
+      exhibitionPhotos: null,
+      membersDB: null,
+      aboutPicturesArray: null,
+      sent: null  });
+  });
   app.get("/contact", (req, res) => {
     res.sendStatus(201);
   });
@@ -327,8 +383,8 @@ const init = async () => {
   });
 
 
-
-
+  // static files middleware - serve CSS, JS, images from public directory
+  app.use(express.static(path.join(__dirname, "public"))); // static files middleware
 
   // ---------- Start server ----------
   app.listen(port, () => {

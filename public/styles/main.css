@@ -39,6 +39,17 @@ body {
   white-space: pre-line;
 }
 
+.about-text {
+  line-height: 1.5;
+  max-height: calc(1.5em * 10);   /* 3 שורות */
+  overflow-y: auto;
+}
+
+/* חשוב ל-iOS כדי לקבל גלילה עם אינרציה */
+.about-text {
+  -webkit-overflow-scrolling: touch;
+}
+
 .handwriting-hebrew {
   font-family: "Playpen Sans Hebrew", cursive;
   font-optical-sizing: auto;
@@ -133,6 +144,15 @@ body {
 footer {
   text-align: center;
   padding: 10px;
+}
+footer a {
+  text-decoration: none;
+  color: rgba(255,255,255,.65) !important;
+}
+
+footer a:hover {
+  color: #fff !important;
+  text-decoration: underline;
 }
 
 /* ===== Photo Boxes ===== */
