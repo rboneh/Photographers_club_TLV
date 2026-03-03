@@ -62,6 +62,8 @@ body {
   color: #ffffff;
 }  
 
+
+
 /* ===== Carousel ===== */
 
 .rb-carousel-item {
@@ -192,6 +194,33 @@ footer a:hover {
   box-shadow: 0 10px 25px rgba(0, 0, 0, .4);
 }
 
+
+.card:hover .card-title {
+  color: #0d6efd;        /* או לבן/אפור בהיר אם אתה רוצה יותר סולידי */
+  text-decoration: underline;
+}
+
+/* ===== For Mobile so no Hovver ===== */
+
+/* כשנכנסים לכרטיס עם מקלדת / פוקוס */
+.col a:focus-visible .card,
+.col a:focus .card {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, .4);
+}
+
+/* שינוי הכותרת */
+.col a:focus-visible .card-title,
+.col a:focus .card-title {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+
+/* בזמן לחיצה (טאצ' בפועל) */
+.col a:active .card,
+.col a:active .card-title {
+  /* ב-active אפשר להשאיר אותו אפקט או אפילו חזק יותר */
+}
 
 /* ===== Responsive ===== */
 
