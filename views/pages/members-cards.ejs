@@ -1,130 +1,156 @@
 <%- include('../partials/header') %>
 
-        <!-- ===== Page ===== -->
-        <div class="d-flex flex-column min-vh-100">
+    <!-- ===== Page ===== -->
+    <div class="d-flex flex-column min-vh-100">
 
-            <main class="flex-grow-1">
-                <div class="container py-5">
+        <main class="flex-grow-1">
+            <div class="container py-5">
 
-                    <h1 class="mb-4 text-center">חברי מועדון הצילום תל אביב</h1>
+                <h1 class="mb-4 text-center">חברי מועדון הצילום תל אביב</h1>
 
-                    <!-- Cards Grid -->
-                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xxl-4 g-4">
+                <!-- Cards Grid -->
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xxl-4 g-4">
 
-                        <% if (locals.membersDB && Array.isArray(membersDB) && membersDB.length) { %>
+                    <% if (locals.membersDB && Array.isArray(membersDB) && membersDB.length) { %>
 
-                            <% membersDB.forEach(member=> {
-                                /****** membersDB structure:
-                                const memberData = {
-                                key: memberKey,
-                                idPhoto: idPhoto, // 👈 הנתיב המלא של תמונת ה-ID
-                                photos: memberPhotos,
-                                memberName: memberName,
-                                memberAbout: memberAbout
-                                }; *******  */
-                                const key = member.key;
-                                const name = member.memberName ?? key;
-                                const about = member.memberAbout ?? "";
-                                const idPhoto = member.idPhoto ?? "public/pictures/img_avatar3.png";
+                        <% membersDB.forEach(member=> {
+                            /****** membersDB structure:
+                            const memberData = {
+                            key: memberKey,
+                            idPhoto: idPhoto, // 👈 הנתיב המלא של תמונת ה-ID
+                            photos: memberPhotos,
+                            memberName: memberName,
+                            memberAbout: memberAbout
+                            }; ******* */
+                            const key = member.key;
+                            const name = member.memberName ?? key;
+                            const about = member.memberAbout ?? "";
+                            const idPhoto = member.idPhoto ?? "public/pictures/img_avatar3.png";
 
-                                const imgSrc = idPhoto;
-                                %>
+                            const imgSrc = idPhoto;
+                            %>
 
-                                <div class="col">
-                                    <a href="/member/<%= member.key %>" class="text-decoration-none text-reset">
-                                        <div class="card bg-dark text-white h-100 border-secondary">
-                                            <div class="photo-box-sqr">
-                                                <img src="<%= imgSrc %>" loading="lazy"alt="<%= name %>">
-                                            </div>
-                                            <div class="card-body">
-                                                <h5 class="card-title mb-2">
-                                                    <%= name %>
-                                                </h5>
-                                                <% if (about) { %>
-                                                    <p class="card-text text-white-50 mb-0 about-text">
-                                                        <%= about %>
+                            <div class="col">
+                                <a href="/member/<%= member.key %>" class="text-decoration-none text-reset">
+                                    <div class="card bg-dark text-white h-100 border-secondary">
+                                        <div class="photo-box-sqr">
+                                            <img src="<%= imgSrc %>" loading="lazy" alt="<%= name %>">
+                                        </div>
+                                        <div class="card-body">
+                                            <h5 class="card-title mb-2">
+                                                <%= name %>
+                                            </h5>
+                                            <% if (about) { %>
+                                                <p class="card-text text-white-50 mb-0 about-text">
+                                                    <%= about %>
+                                                </p>
+                                                <% } %>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+
+                            <% }) %>
+
+                                <% } else { %>
+
+                                    <!-- FALLBACK: hard-coded cards -->
+
+                                    <!-- Card 1 -->
+                                    <div class="col">
+                                        <a href="/members/Moshe_Gross" class="text-decoration-none text-reset">
+                                            <div class="card bg-dark text-white h-100 border-secondary">
+                                                <div class="photo-box-sqr">
+                                                    <img src="/members/Moshe_Gross/id_sConnery-2048x2048.jpg"
+                                                        alt="Moshe Gross">
+                                                </div>
+                                                <div class="card-body">
+                                                    <h5 class="card-title mb-2">משה גרוס</h5>
+                                                    <p class="card-text text-white-50 mb-0">
+                                                        צלם דוקומנטרי מתל אביב. עובד בעיקר עם סרטי פורמט בינוני
+                                                        ופרויקטים ארוכי טווח.
                                                     </p>
-                                                    <% } %>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </a>
-                                </div>
+                                        </a>
+                                    </div>
 
-                                <% }) %>
-
-                                    <% } else { %>
-
-                                        <!-- FALLBACK: hard-coded cards -->
-
-                                        <!-- Card 1 -->
-                                        <div class="col">
-                                            <a href="/members/Moshe_Gross" class="text-decoration-none text-reset">
-                                                <div class="card bg-dark text-white h-100 border-secondary">
-                                                    <div class="photo-box-sqr">
-                                                        <img src="/members/Moshe_Gross/id_sConnery-2048x2048.jpg"
-                                                            alt="Moshe Gross">
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <h5 class="card-title mb-2">משה גרוס</h5>
-                                                        <p class="card-text text-white-50 mb-0">
-                                                            צלם דוקומנטרי מתל אביב. עובד בעיקר עם סרטי פורמט בינוני
-                                                            ופרויקטים ארוכי טווח.
-                                                        </p>
-                                                    </div>
+                                    <!-- Card 2 -->
+                                    <div class="col">
+                                        <a href="/members/Rahel_Rinat_hilling" class="text-decoration-none text-reset">
+                                            <div class="card bg-dark text-white h-100 border-secondary">
+                                                <div class="photo-box-sqr">
+                                                    <img src="/members/Rahel_Rinat_hilling/id_lCroft_thumb-1920-644894.jpg"
+                                                        alt="Rahel Rinat Hilling">
                                                 </div>
-                                            </a>
-                                        </div>
-
-                                        <!-- Card 2 -->
-                                        <div class="col">
-                                            <a href="/members/Rahel_Rinat_hilling"
-                                                class="text-decoration-none text-reset">
-                                                <div class="card bg-dark text-white h-100 border-secondary">
-                                                    <div class="photo-box-sqr">
-                                                        <img src="/members/Rahel_Rinat_hilling/id_lCroft_thumb-1920-644894.jpg"
-                                                            alt="Rahel Rinat Hilling">
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <h5 class="card-title mb-2">רחל רינת הילינג</h5>
-                                                        <p class="card-text text-white-50 mb-0">
-                                                            צלמת רחוב, ארכיטקטורה ודיוקנאות. חוקרת זהות עירונית וזיכרון.
-                                                        </p>
-                                                    </div>
+                                                <div class="card-body">
+                                                    <h5 class="card-title mb-2">רחל רינת הילינג</h5>
+                                                    <p class="card-text text-white-50 mb-0">
+                                                        צלמת רחוב, ארכיטקטורה ודיוקנאות. חוקרת זהות עירונית וזיכרון.
+                                                    </p>
                                                 </div>
-                                            </a>
-                                        </div>
+                                            </div>
+                                        </a>
+                                    </div>
 
-                                        <!-- Card 3 -->
-                                        <div class="col">
-                                            <a href="/members/Ronen_Boneh" class="text-decoration-none text-reset">
-                                                <div class="card bg-dark text-white h-100 border-secondary">
-                                                    <div class="photo-box-sqr">
-                                                        <img src="/members/Ronen_Boneh/id_jack-bauer-wallpaper.jpg"
-                                                            loading="lazy" alt="Ronen Boneh">
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <h5 class="card-title mb-2">רונן בונה</h5>
-                                                        <p class="card-text text-white-50 mb-0">
-                                                            צלם נוף, נוף אורבני ואנשים. עובד עם מצלמות מדיום פורמט
-                                                            ו־35מ״מ.
-                                                        </p>
-                                                    </div>
+                                    <!-- Card 3 -->
+                                    <div class="col">
+                                        <a href="/members/Ronen_Boneh" class="text-decoration-none text-reset">
+                                            <div class="card bg-dark text-white h-100 border-secondary">
+                                                <div class="photo-box-sqr">
+                                                    <img src="/members/Ronen_Boneh/id_jack-bauer-wallpaper.jpg"
+                                                        loading="lazy" alt="Ronen Boneh">
                                                 </div>
-                                            </a>
-                                        </div>
+                                                <div class="card-body">
+                                                    <h5 class="card-title mb-2">רונן בונה</h5>
+                                                    <p class="card-text text-white-50 mb-0">
+                                                        צלם נוף, נוף אורבני ואנשים. עובד עם מצלמות מדיום פורמט
+                                                        ו־35מ״מ.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
 
-                                        <% } %>
-
-                    </div>
-                    <!-- /Cards Grid -->
+                                    <% } %>
 
                 </div>
-            </main>
+                <!-- /Cards Grid -->
 
-            <%- include('../partials/footer') %>
+            </div>
+        </main>
 
-        </div>
+        <%- include('../partials/footer') %>
+
+    </div>
 
     </body>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+
+            const cards = document.querySelectorAll(".card");
+
+            const observer = new IntersectionObserver((entries) => {
+
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        // Remove class from all
+                        cards.forEach(c => c.classList.remove("in-view"));
+
+                        // Add to the one most visible
+                        entry.target.classList.add("in-view");
+                    }
+                });
+
+            }, {
+                root: null,
+                threshold: 0.6   // 60% visible triggers it
+            });
+
+            cards.forEach(card => observer.observe(card));
+
+        });
+    </script>
 
     </html>

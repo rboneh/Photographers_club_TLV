@@ -6,14 +6,14 @@ import path from "path";
 
 
 /**
- * Recursive function to get all files down the folder tree
+ * Recursive function to get jpg all files down the folder tree
  * @param {string} dir - starting directory
  * @param {Array} files - array to accumulate file paths
  * @returns {Array} files- array of file paths 
  * 
  * getFiles is synchronous read. Need to be change to async. 
  */
-export function getFiles(dir, files = []) {
+export function getJpgFiles(dir, files = []) {
   const fileList = fs.readdirSync(dir);
 
   for (const file of fileList) {
@@ -27,7 +27,7 @@ export function getFiles(dir, files = []) {
     // This is the recursive part. If the file is a directory,
     // we call the same function again
     if (fs.statSync(name).isDirectory()) {
-      getFiles(name, files);
+      getJpgFiles(name, files);
     } else {
       // only keep .jpg / .JPG / .jpeg (optional)
       const lower = file.toLowerCase();
@@ -57,7 +57,7 @@ export function genMembersDB(membersKeysArray, membersDir) {
     const memberDirPath = join(membersDir, memberKey);
 
     // תמונות רגילות (id_ מסונן כבר ב-getFiles)
-    const memberPhotos = getFiles(memberDirPath);
+    const memberPhotos = getJpgFiles(memberDirPath);
 
     // חיפוש id_*.jpg ישירות בתיקייה
     let idPhoto = null;
@@ -182,8 +182,8 @@ export function genExhibitionsDB(exhibitionsListArr, exhibitionDir) {
 
     exhibitiosDB[exhibition] = currentExhbitionDB;
   }
-const dbKeys = Object.keys(exhibitiosDB);
-console.log(dbKeys);
+  const dbKeys = Object.keys(exhibitiosDB);
+  console.log(dbKeys);
   return exhibitiosDB;
 }
 
@@ -270,6 +270,7 @@ function parseMemberTxt(text) {
 
   let memberName = "";
   let memberAbout = "";
+  let videoURL = "";
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();   // removes leading spaces/tabs
@@ -278,6 +279,12 @@ function parseMemberTxt(text) {
     const nameMatch = line.match(/^שם\s*[:：]\s*(.*)$/);
     if (nameMatch) {
       memberName = nameMatch[1].trim();
+      continue;
+    }
+    // match: וידאו : לינק
+    const videoURLmatch = line.match(/^וידאו\s*[:：]\s*(.*)$/);
+    if (videoURLmatch) {
+      videoURL = videoURLmatch[1].trim();
       continue;
     }
 
@@ -292,7 +299,7 @@ function parseMemberTxt(text) {
     }
   }
 
-  return { memberName, memberAbout };
+  return { memberName, memberAbout, videoURL };
 }
 
 /**
@@ -320,22 +327,22 @@ function parseMemberTxt(text) {
  * @param {*} exhibistinsDB 
  * @returns 
  */
-export function genExhibitsionsDB4Carousel(exhibistinsDB){
+export function genExhibitsionsDB4Carousel(exhibistinsDB) {
   console.log("\n\nGenerating exhibitionsDB4Carousel...");
 
   const exhibitionsCarouselDB = {};
 
   for (const [exhibitionKey, exhibitionObj] of Object.entries(exhibistinsDB)) {
-  console.log("exhibitionKey: ", exhibitionKey, "\nexhibitionObj:",Object.keys(exhibitionObj));
+    console.log("exhibitionKey: ", exhibitionKey, "\nexhibitionObj:", Object.keys(exhibitionObj));
 
-  const exhibitionDB = {};
-  exhibitionDB.exhibitionName = exhibitionObj.exhibitionName;
-  exhibitionDB.exhibitionAbout = exhibitionObj.exhibitionAbout;
+    const exhibitionDB = {};
+    exhibitionDB.exhibitionName = exhibitionObj.exhibitionName;
+    exhibitionDB.exhibitionAbout = exhibitionObj.exhibitionAbout;
 
-  const exhibitionPhotosArr = genExhibitionPhotosArr(exhibitionObj.exhibitionURL);
-  exhibitionDB.exhibitionPhotosArr = exhibitionPhotosArr;
+    const exhibitionPhotosArr = genExhibitionPhotosArr(exhibitionObj.exhibitionURL);
+    exhibitionDB.exhibitionPhotosArr = exhibitionPhotosArr;
 
-  exhibitionsCarouselDB[exhibitionKey] = exhibitionDB;
+    exhibitionsCarouselDB[exhibitionKey] = exhibitionDB;
 
   }
   return exhibitionsCarouselDB;
@@ -347,14 +354,14 @@ export function genExhibitsionsDB4Grid(exhibitionsDB4Carousel) {
   const exhibitionsDB4Grid = exhibitionsDB4Carousel; // No copy.. Just for readability. We will add membersArr to each exhibition object in place.
 
 
-  for(let key in exhibitionsDB4Grid) {
-  const exhibition = exhibitionsDB4Grid[key];
-  const photosArr = exhibition.exhibitionPhotosArr;
-  const membersArr = buildMembers(photosArr);
-  exhibition.membersArr = membersArr;
-}
+  for (let key in exhibitionsDB4Grid) {
+    const exhibition = exhibitionsDB4Grid[key];
+    const photosArr = exhibition.exhibitionPhotosArr;
+    const membersArr = buildMembers(photosArr);
+    exhibition.membersArr = membersArr;
+  }
 
-   return exhibitionsDB4Grid;
+  return exhibitionsDB4Grid;
 }
 
 /**
@@ -421,7 +428,7 @@ export function genExhibitionPhotosArr(dir, files = []) {
   const hasSubDirs = fileList.some((file) => {
     if (file.includes(".DS_Store")) return false;
     const fullPath = path.join(dir, file);
-    return fs.existsSync(fullPath) && fs.statSync(fullPath ).isDirectory();
+    return fs.existsSync(fullPath) && fs.statSync(fullPath).isDirectory();
   });
 
   // =======================
@@ -436,27 +443,27 @@ export function genExhibitionPhotosArr(dir, files = []) {
     const content = fs.readFileSync(memberTxtPath, "utf8");
 
     let memberName = "";
-let memberAbout = "";
-let collectingAbout = false;
+    let memberAbout = "";
+    let collectingAbout = false;
 
-for (const rawLine of content.split(/\r?\n/)) {
+    for (const rawLine of content.split(/\r?\n/)) {
 
-  if (rawLine.startsWith("שם:")) {
-    memberName = rawLine.replace("שם:", "").trim();
-    collectingAbout = false;
-    continue;
-  }
+      if (rawLine.startsWith("שם:")) {
+        memberName = rawLine.replace("שם:", "").trim();
+        collectingAbout = false;
+        continue;
+      }
 
-  if (rawLine.startsWith("אודות:")) {
-    memberAbout = rawLine.replace("אודות:", "").trim();
-    collectingAbout = true;
-    continue;
-  }
+      if (rawLine.startsWith("אודות:")) {
+        memberAbout = rawLine.replace("אודות:", "").trim();
+        collectingAbout = true;
+        continue;
+      }
 
-  if (collectingAbout) {
-    memberAbout += "\n" + rawLine.trim();
-  }
-}
+      if (collectingAbout) {
+        memberAbout += "\n" + rawLine.trim();
+      }
+    }
 
 
     // collect jpg/jpeg in this leaf
@@ -516,7 +523,7 @@ export function genMembersPhotosArr(dir, files = []) {
   const hasSubDirs = fileList.some((file) => {
     if (file.includes(".DS_Store")) return false;
     const fullPath = path.join(dir, file);
-    return fs.existsSync(fullPath) && fs.statSync(fullPath ).isDirectory();
+    return fs.existsSync(fullPath) && fs.statSync(fullPath).isDirectory();
   });
 
   // =======================
