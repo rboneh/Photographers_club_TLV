@@ -77,14 +77,15 @@ export function genMembersDB(membersKeysArray, membersDir) {
       idPhoto = fullPath;
     }
 
-    const { memberName, memberAbout } = readMemberTxtIfExists(memberDirPath);
+    const { memberName, memberAbout, videoURL } = readMemberTxtIfExists(memberDirPath);
 
     const memberData = {
       key: memberKey,
       idPhoto: idPhoto,        // 👈 הנתיב המלא של תמונת ה-ID
       photos: memberPhotos,
       memberName: memberName,
-      memberAbout: memberAbout
+      memberAbout: memberAbout,
+      videoURL: videoURL,
     };
 
     membersDB.push(memberData);
@@ -255,8 +256,9 @@ function readMemberTxtIfExists(memberDirPath, fileName = "member.txt") {
   try {
     const text = fs.readFileSync(filePath, "utf8");
     return parseMemberTxt(text);
-  } catch {
-    return { memberName: null, memberAbout: null };
+  } catch (error) {
+    console.error("Error reading member.txt:", error);
+    return { memberName: null, memberAbout: null , videoURL: null};
   }
 }
 
@@ -403,7 +405,7 @@ export function buildMembers(exhibitionPhotosArr = []) {
     }
 
     map.get(name).photos.push({
-      picture: p.picture || "/pictures/img_avatar3.png",
+      picture: p.picture || "/pictures/id_avatar_general.jpg",
       // אפשר להוסיף meta בעתיד: title, year, camera, etc
     });
   }
@@ -586,4 +588,21 @@ export function genMembersPhotosArr(dir, files = []) {
   }
 
   return files;
+}
+
+/**
+ * Convert YouTube URL to embed URL
+ * @param {string} url - original YouTube URL
+ * @returns {string|null} - embed URL or null if invalid
+ */
+export function youtubeEmbed(url) {
+  if (!url) return null;
+
+  const match = url.match(
+    /(?:youtu\.be\/|youtube\.com\/watch\?v=|youtube\.com\/embed\/)([^?&]+)/ 
+  );
+
+  if (!match) return null;
+
+  return `https://www.youtube.com/embed/${match[1]}`;
 }

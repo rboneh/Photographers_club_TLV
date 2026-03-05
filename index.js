@@ -320,6 +320,7 @@ ${urls
       picturesDB: null,
       exhibitionPhotos: null,
       membersDB: membersDB,
+      videoURL: member.videoURL ? member.videoURL : null,
     });
   });
 
