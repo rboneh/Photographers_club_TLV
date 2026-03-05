@@ -69,6 +69,11 @@ app.use(
         "https://fastly.picsum.photos",
         "data:",
       ],
+      frameSrc: [
+        "'self'",
+        "https://www.youtube.com",
+        "https://www.youtube-nocookie.com"
+      ],
     },
   })
 );
@@ -284,7 +289,8 @@ ${urls
       exhibitionPhotos: null,
       membersDB: null,
       aboutPicturesArray: null,
-      sent: null  });
+      sent: null
+    });
   });
   app.get("/contact", (req, res) => {
     res.sendStatus(201);
@@ -312,6 +318,7 @@ ${urls
       return res.status(404).send("Member not found");
     }
 
+    console.log(u.youtubeEmbed(member.videoURL));
     res.render("pages/member-page-grid.ejs", {
       member: member,
       pageTitle: `${member.memberName} | מועדון הצילום תל אביב`,
@@ -320,6 +327,7 @@ ${urls
       picturesDB: null,
       exhibitionPhotos: null,
       membersDB: membersDB,
+      videoURL: u.youtubeEmbed(member.videoURL),
     });
   });
 
