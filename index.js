@@ -350,6 +350,13 @@ ${urls
     if (!exhibitionsList.includes(exhibitionName)) {
       return res.status(404).send("Exhibition not found");
     }
+
+    // shuffle members for each exhibition page load, but keep first and last member fixed (e.g. for special placements)
+    if (exhibitionObj.shuffle === "מלא") {
+      exhibitionObj.membersArr = u.shuffleArray(exhibitionObj.membersArr, 0, exhibitionObj.membersArr.length - 1); // shuffle members for each exhibition page load
+    } else if (exhibitionObj.shuffle === "חלקי") {
+      exhibitionObj.membersArr = u.shuffleArray(exhibitionObj.membersArr, 1, exhibitionObj.membersArr.length - 2); // shuffle members for each exhibition page load, but keep first member fixed
+    }
     // res.render("pages/exhibition-page-carousel.ejs", {
     res.render("pages/exhibition-page-grid.ejs", {
       membersPhotos: null,

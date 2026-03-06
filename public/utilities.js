@@ -172,11 +172,12 @@ export function genExhibitionsDB(exhibitionsListArr, exhibitionDir) {
     });
 
 
-    const { memberName: exhibitionName, memberAbout: exhibitionAbout } = readMemberTxtIfExists(exhibitionDirPath, "about.txt");
+    const { memberName: exhibitionName, memberAbout: exhibitionAbout, shuffle: shuffle } = readMemberTxtIfExists(exhibitionDirPath, "about.txt");
 
     currentExhbitionDB.exhibitionURL = exhibitionDirPath;
     currentExhbitionDB.exhibitionName = exhibitionName;
     currentExhbitionDB.exhibitionAbout = exhibitionAbout;
+    currentExhbitionDB.shuffle = shuffle;
     const exhibitionMembersDb = genMembersDB(membersList, exhibitionDirPath);
     currentExhbitionDB.members = membersList;
     currentExhbitionDB.membersDB = exhibitionMembersDb;
@@ -193,12 +194,16 @@ export function genExhibitionsDB(exhibitionsListArr, exhibitionDir) {
 /**
  *shuffle array in place
  * @param {Array} arr - array to shuffle
- * @returns {Array} - shuffled array 
+ * @returns {Array} - shuffled array  
+ * @param {number} start - starting index for shuffle (default: 0)
+ * @param {number} end - ending index for shuffle (default: arr.length - 1) 
+ * Fisher-Yates algorithm implementation.
+ *  
  */
-export function shuffleArray(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1)); // pick index 0..i
-    [arr[i], arr[j]] = [arr[j], arr[i]];           // swap
+export function shuffleArray(arr, start = 0, end = arr.length - 1) {
+  for (let i = end; i > start; i--) {
+    const j = start + Math.floor(Math.random() * (i - start + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;
 }
@@ -258,7 +263,7 @@ function readMemberTxtIfExists(memberDirPath, fileName = "member.txt") {
     return parseMemberTxt(text);
   } catch (error) {
     console.error("Error reading member.txt:", error);
-    return { memberName: null, memberAbout: null , videoURL: null};
+    return { memberName: null, memberAbout: null , videoURL: null, shuffle: null};
   }
 }
 
@@ -273,6 +278,7 @@ function parseMemberTxt(text) {
   let memberName = "";
   let memberAbout = "";
   let videoURL = "";
+  let shuffle = "none";
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();   // removes leading spaces/tabs
@@ -290,6 +296,13 @@ function parseMemberTxt(text) {
       continue;
     }
 
+    // match: וידאו : לינק
+    const shuffleMatch = line.match(/^ערבוב\s*[:：]\s*(.*)$/);
+    if (shuffleMatch) {
+      shuffle = shuffleMatch[1].trim();
+      continue;
+    }
+
     // match: אודות : לורם איפסום
     const aboutMatch = line.match(/^אודות\s*[:：]\s*(.*)$/);
     if (aboutMatch) {
@@ -301,7 +314,7 @@ function parseMemberTxt(text) {
     }
   }
 
-  return { memberName, memberAbout, videoURL };
+  return { memberName, memberAbout, videoURL, shuffle };
 }
 
 /**
@@ -340,7 +353,7 @@ export function genExhibitsionsDB4Carousel(exhibistinsDB) {
     const exhibitionDB = {};
     exhibitionDB.exhibitionName = exhibitionObj.exhibitionName;
     exhibitionDB.exhibitionAbout = exhibitionObj.exhibitionAbout;
-
+    exhibitionDB.shuffle = exhibitionObj.shuffle;
     const exhibitionPhotosArr = genExhibitionPhotosArr(exhibitionObj.exhibitionURL);
     exhibitionDB.exhibitionPhotosArr = exhibitionPhotosArr;
 
