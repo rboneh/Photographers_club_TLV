@@ -326,7 +326,7 @@ ${urls
       membersPhotos: null,
       picturesDB: null,
       exhibitionPhotos: null,
-      membersDB: membersDB,
+      membersDB: null,
       videoURL: u.youtubeEmbed(member.videoURL),
     });
   });

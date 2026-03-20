@@ -6,93 +6,159 @@
         <main class="flex-grow-1">
             <div class="container py-5">
                 <% if (locals.member) { %>
-                    <% /****** membersDB structure: const memberData={ key: memberKey, idPhoto: idPhoto, // 👈 הנתיב
-                        המלא של תמונת ה-ID photos: memberPhotos, memberName: memberName, memberAbout: memberAbout };
-                        ******* */ %>
-                        <% const key=member.key; const name=member.memberName ?? key; const about=member.memberAbout
-                            ?? "" ; const idPhoto=member.idPhoto ?? "/pictures/id_avatar_general.jpg" ; const
-                            imgSrc=idPhoto; const videoURL=member.videoURL || null ; const memberPhotos=member.photos ||
-                            [] ; %>
+                    <% const key=member.key; %>
+                        <% const name=member.memberName ?? key; %>
+                            <% const videoURL=locals.videoURL || null; %>
+                                <% const memberPhotos=member.photos || []; %>
+                                    <% const series=member.series || {}; %>
 
 
 
-                            <h1 class="mb-4 text-center">
-                                <%= name %>
-                            </h1>
+                                        <h1 class="mb-4 text-center">
+                                            <%= name %>
+                                        </h1>
 
-                            <% if (member.videoURL) { %>
+                                        <% if (videoURL) { %>
 
-                                <!-- ===== Video ===== -->
-                                <div class="ratio ratio-16x9 mb-4">
-                                    <iframe width="560" height="315"
-                                        src="https://www.youtube.com/embed/NtHJ03jUbKA?si=WEOZ-g5Zyx9CFjqo"
-                                        title="YouTube video player" frameborder="0"
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                        referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-                                </div>
+                                            <!-- ===== Video ===== -->
+                                            <div class="ratio ratio-16x9 mb-4">
+                                                <iframe width="560" height="315" src="<%= videoURL %>"
+                                                    title="YouTube video player" frameborder="0"
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                    referrerpolicy="strict-origin-when-cross-origin"
+                                                    allowfullscreen></iframe>
+                                            </div>
 
-                                <% } else { %>
+                                            <% } else { %>
 
-                                    <!-- ===== Carousel ===== -->
-                                    <div id="memberCarousel" class="carousel slide" data-bs-ride="carousel" dir="rtl">
-                                        <div class="carousel-inner container-l">
+                                                <!-- ===== Carousel ===== -->
+                                                <div id="memberCarousel" class="carousel slide" data-bs-ride="carousel"
+                                                    dir="rtl">
+                                                    <div class="carousel-inner container-l">
 
-                                            <% memberPhotos.forEach((picture, index)=> { %>
+                                                        <% memberPhotos.forEach((picture, index)=> { %>
 
-                                                <div
-                                                    class="carousel-item rb-carousel-item <%= index === 0 ? 'active' : '' %>">
-                                                    <div class="d-flex justify-content-center">
-                                                        <img src="<%= picture %>" loading="lazy"
-                                                            alt="צילום של <%= name %>" class="carousel-image">
+                                                            <div
+                                                                class="carousel-item rb-carousel-item <%= index === 0 ? 'active' : '' %>">
+                                                                <div class="d-flex justify-content-center">
+                                                                    <img src="<%= picture %>" loading="lazy"
+                                                                        alt="צילום של <%= name %>"
+                                                                        class="carousel-image">
+                                                                </div>
+                                                            </div>
+
+                                                            <% }) %>
+
                                                     </div>
+
+                                                    <!-- controls -->
+                                                    <button class="carousel-control-prev" type="button"
+                                                        data-bs-target="#memberCarousel" data-bs-slide="prev">
+                                                        <span class="carousel-control-prev-icon"></span>
+                                                    </button>
+
+                                                    <button class="carousel-control-next" type="button"
+                                                        data-bs-target="#memberCarousel" data-bs-slide="next">
+                                                        <span class="carousel-control-next-icon"></span>
+                                                    </button>
+
                                                 </div>
 
-                                                <% }) %>
+                                                <% } %>
 
-                                        </div>
-
-                                        <!-- controls -->
-                                        <button class="carousel-control-prev" type="button"
-                                            data-bs-target="#memberCarousel" data-bs-slide="prev">
-                                            <span class="carousel-control-prev-icon"></span>
-                                        </button>
-
-                                        <button class="carousel-control-next" type="button"
-                                            data-bs-target="#memberCarousel" data-bs-slide="next">
-                                            <span class="carousel-control-next-icon"></span>
-                                        </button>
-
-                                    </div>
-
-                                    <% } %>
-
-                                        <div class="d-flex justify-content-center mt-4 mb-5">
-                                            <a href="/members" class="btn btn-outline-light">חזרה לחברים</a>
-                                        </div>
-
-
-
-                                        <!-- exhibition pictures grid per member -->
-
-                                        <div class="masonry-wrapper">
-                                            <div class="masonry <%= memberPhotos.length <= 3 ? 'few' : 'many' %>">
-                                                <% memberPhotos.forEach(photo=> { %>
-                                                    <div class="masonry-item">
-                                                        <button type="button" class="btn p-0 border-0 rb-thumb"
-                                                            data-img-src="<%= photo %>" data-member-name="<%= name %>"
-                                                            aria-label="צילום מאת <%= name %>">
-                                                            <img src="<%= photo %>" class="img-fluid rounded shadow-sm"
-                                                                loading="lazy" alt="צילום מאת <%= name %>">
-                                                        </button>
+                                                    <div class="d-flex justify-content-center mt-4 mb-5">
+                                                        <a href="/members" class="btn btn-outline-light">חזרה לחברים</a>
                                                     </div>
-                                                    <% }) %>
-                                            </div>
-                                        </div>
 
-                                        <% } else { %>
-                                            <p class="text-center">חבר לא נמצא.</p>
-                                            <% } %>
-            </div>
+
+
+                                                    <!-- exhibition pictures grid per member -->
+                                                    <% if (Object.keys(series).length> 0) { %>
+
+                                                        <!-- grid for each series of the member: -->
+
+                                                        <% const sArr=Object.keys(series); %>
+                                                            <% sArr.forEach((s)=> { %>
+                                                                <% const sAbout=series[s].seriesAbout; %>
+                                                                    <% const sName=series[s].seriesName; %>
+                                                                        <% const sPhotos=series[s].photos || []; %>
+                                                                            <div class="container-fluid py-4">
+                                                                                <div class="container py-3">
+                                                                                    <h3
+                                                                                        class="mb-3 text-center handwriting-hebrew">
+                                                                                        <%= sName %>
+                                                                                    </h3>
+                                                                                    <% if (sAbout) { %>
+                                                                                        <p
+                                                                                            class="h4 text-center pb-4 opacity-75">
+                                                                                            <%= sAbout %>
+                                                                                        </p>
+                                                                                        <% } %>
+
+                                                                                            <div
+                                                                                                class="masonry-wrapper">
+                                                                                                <div
+                                                                                                    class="masonry <%= sPhotos.length <= 3 ? 'few' : 'many' %>">
+                                                                                                    <%
+                                                                                                        sPhotos.forEach(photo=>
+                                                                                                        { %>
+                                                                                                        <div
+                                                                                                            class="masonry-item">
+                                                                                                            <button
+                                                                                                                type="button"
+                                                                                                                class="btn p-0 border-0 rb-thumb"
+                                                                                                                data-member-name="<%= name %>"
+                                                                                                                data-img-src="<%= photo %>"
+                                                                                                                aria-label="צילום מאת <%= name %>">
+
+                                                                                                                <img src="<%= photo %>"
+                                                                                                                    class="img-fluid rounded shadow-sm"
+                                                                                                                    loading="lazy"
+                                                                                                                    alt="צילום מאת <%= name %>">
+                                                                                                            </button>
+                                                                                                        </div>
+                                                                                                        <% }) %>
+                                                                                                </div>
+                                                                                            </div>
+
+                                                                                            <!-- end of series grid -->
+                                                                                            <% }); %>
+                                                                                                <% } else { %>
+                                                                                                    <!-- No Series All photos in one grid: -->
+                                                                                                    <div
+                                                                                                        class="masonry-wrapper">
+                                                                                                        <div
+                                                                                                            class="masonry <%= memberPhotos.length <= 3 ? 'few' : 'many' %>">
+                                                                                                            <%
+                                                                                                                memberPhotos.forEach((photo)=>
+                                                                                                                { %>
+                                                                                                                <div
+                                                                                                                    class="masonry-item">
+                                                                                                                    <button
+                                                                                                                        type="button"
+                                                                                                                        class="btn p-0 border-0 rb-thumb"
+                                                                                                                        data-img-src="<%= photo %>"
+                                                                                                                        data-member-name="<%= name %>"
+                                                                                                                        aria-label="צילום מאת <%= name %>">
+                                                                                                                        <img src="<%= photo %>"
+                                                                                                                            class="img-fluid rounded shadow-sm"
+                                                                                                                            loading="lazy"
+                                                                                                                            alt="צילום מאת <%= name %>">
+                                                                                                                    </button>
+                                                                                                                </div>
+                                                                                                                <% });
+                                                                                                                    %>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                    <% } %>
+                                                                                                        <% } else { %>
+                                                                                                            <p
+                                                                                                                class="text-center">
+                                                                                                                חבר לא
+                                                                                                                נמצא.
+                                                                                                            </p>
+                                                                                                            <% } %>
+                                                                                </div>
         </main>
 
         <%- include('../partials/footer') %>
@@ -122,7 +188,7 @@
             const src = btn?.dataset?.imgSrc;
             if (modalImg && src) {
                 modalImg.src = src;
-                modalImg.alt = `צילום מאת ${name}`;
+                modalImg.alt = btn.dataset.memberName ? `צילום מאת ${btn.dataset.memberName}` : "";
             }
         }
 

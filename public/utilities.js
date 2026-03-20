@@ -13,7 +13,7 @@ import path from "path";
  * 
  * getFiles is synchronous read. Need to be change to async. 
  */
-export function getJpgFiles(dir, files = []) {
+export function getJpgFilesRec(dir, files = []) {
   const fileList = fs.readdirSync(dir);
 
   for (const file of fileList) {
@@ -27,7 +27,7 @@ export function getJpgFiles(dir, files = []) {
     // This is the recursive part. If the file is a directory,
     // we call the same function again
     if (fs.statSync(name).isDirectory()) {
-      getJpgFiles(name, files);
+      getJpgFilesRec(name, files);
     } else {
       // only keep .jpg / .JPG / .jpeg (optional)
       const lower = file.toLowerCase();
@@ -41,6 +41,19 @@ export function getJpgFiles(dir, files = []) {
   }
 
   return files;
+}
+
+export function getDirNames(dirPath) {
+  try {
+    const dirEntries = fs.readdirSync(dirPath, { withFileTypes: true });
+
+    return dirEntries
+      .filter((dirent) => dirent.isDirectory())
+      .map((dirent) => dirent.name);
+  } catch (err) {
+    console.error(`Error reading directory: ${dirPath}`, err);
+    return [];
+  }
 }
 
 /**
@@ -57,7 +70,32 @@ export function genMembersDB(membersKeysArray, membersDir) {
     const memberDirPath = join(membersDir, memberKey);
 
     // תמונות רגילות (id_ מסונן כבר ב-getFiles)
-    const memberPhotos = getJpgFiles(memberDirPath);
+    const memberPhotos = getJpgFilesRec(memberDirPath);
+
+    /* 
+    /* if there are series subfolders, we will add them to the memberData as an object of arrays of photos, 
+    /* each array for a series. The key of each array will be the name of the series 
+    /* (the name of the subfolder).
+    */
+    const seriesDirs = getDirNames(memberDirPath);
+    const memberSeries = {};
+    if (seriesDirs.length > 0) {
+      seriesDirs.forEach(seriesDir => {
+        const seriesDirPath = join(memberDirPath, seriesDir);
+        const seriesPhotos = getJpgFilesRec(seriesDirPath);
+
+
+        const { memberName: seriesName, memberAbout: seriesAbout } = readMemberTxtIfExists(seriesDirPath);
+
+        const seriesData = {
+          key: memberKey,
+          photos: seriesPhotos,
+          seriesName: seriesName,
+          seriesAbout: seriesAbout,
+        };
+        memberSeries[seriesDir] = seriesData;
+      });
+    }
 
     // חיפוש id_*.jpg ישירות בתיקייה
     let idPhoto = null;
@@ -77,7 +115,8 @@ export function genMembersDB(membersKeysArray, membersDir) {
       idPhoto = fullPath;
     }
 
-    const { memberName, memberAbout, videoURL } = readMemberTxtIfExists(memberDirPath);
+    //{memberName: string, memberAbout: string,  videoURL: string, shuffle: string, series: string}
+    const { memberName: memberName, memberAbout: memberAbout, videoURL: videoURL, series: series } = readMemberTxtIfExists(memberDirPath);
 
     const memberData = {
       key: memberKey,
@@ -86,6 +125,7 @@ export function genMembersDB(membersKeysArray, membersDir) {
       memberName: memberName,
       memberAbout: memberAbout,
       videoURL: videoURL,
+      series: memberSeries || null,   // אם יש תיקיות משנה, נוסיף את המידע שלהן
     };
 
     membersDB.push(memberData);
@@ -249,7 +289,7 @@ export function date4fileName(currentDate) {
 /**
  * 
  * @param {*} memberDirPath 
- * @returns { memberName: string, memberAbout: string  }
+ * @returns { memberName: string, memberAbout: string,  videoURL: string, shuffle: string, series: string}
  */
 function readMemberTxtIfExists(memberDirPath, fileName = "member.txt") {
   const filePath = join(memberDirPath, fileName);
@@ -263,7 +303,7 @@ function readMemberTxtIfExists(memberDirPath, fileName = "member.txt") {
     return parseMemberTxt(text);
   } catch (error) {
     console.error("Error reading member.txt:", error);
-    return { memberName: null, memberAbout: null , videoURL: null, shuffle: null};
+    return { memberName: null, memberAbout: null, videoURL: null, shuffle: null, series: null };
   }
 }
 
@@ -279,6 +319,7 @@ function parseMemberTxt(text) {
   let memberAbout = "";
   let videoURL = "";
   let shuffle = "none";
+  let series = "";
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();   // removes leading spaces/tabs
@@ -289,6 +330,14 @@ function parseMemberTxt(text) {
       memberName = nameMatch[1].trim();
       continue;
     }
+
+    // match: סידרה : S1
+    const seriesMatch = line.match(/^סידרה\s*[:：]\s*(.*)$/);
+    if (seriesMatch) {
+      series = seriesMatch[1].trim();
+      continue;
+    }
+
     // match: וידאו : לינק
     const videoURLmatch = line.match(/^וידאו\s*[:：]\s*(.*)$/);
     if (videoURLmatch) {
@@ -314,7 +363,7 @@ function parseMemberTxt(text) {
     }
   }
 
-  return { memberName, memberAbout, videoURL, shuffle };
+  return { memberName, memberAbout, videoURL, shuffle, series };
 }
 
 /**
@@ -354,6 +403,7 @@ export function genExhibitsionsDB4Carousel(exhibistinsDB) {
     exhibitionDB.exhibitionName = exhibitionObj.exhibitionName;
     exhibitionDB.exhibitionAbout = exhibitionObj.exhibitionAbout;
     exhibitionDB.shuffle = exhibitionObj.shuffle;
+    exhibitionDB.series = exhibitionObj.series;
     const exhibitionPhotosArr = genExhibitionPhotosArr(exhibitionObj.exhibitionURL);
     exhibitionDB.exhibitionPhotosArr = exhibitionPhotosArr;
 
@@ -516,7 +566,7 @@ export function genExhibitionPhotosArr(dir, files = []) {
     const name = path.join(dir, file);
 
     if (fs.statSync(name).isDirectory()) {
-      genExhibitionPhotosArr(name, files); // <-- recursion
+      genMembersPhotosArr(name, files);
     }
   }
 
@@ -596,7 +646,7 @@ export function genMembersPhotosArr(dir, files = []) {
     const name = path.join(dir, file);
 
     if (fs.statSync(name).isDirectory()) {
-      genExhibitionPhotosArr(name, files); // <-- recursion
+      genMembersPhotosArr(name, files);
     }
   }
 
@@ -612,7 +662,7 @@ export function youtubeEmbed(url) {
   if (!url) return null;
 
   const match = url.match(
-    /(?:youtu\.be\/|youtube\.com\/watch\?v=|youtube\.com\/embed\/)([^?&]+)/ 
+    /(?:youtu\.be\/|youtube\.com\/watch\?v=|youtube\.com\/embed\/)([^?&]+)/
   );
 
   if (!match) return null;
