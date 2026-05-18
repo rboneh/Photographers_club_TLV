@@ -314,8 +314,9 @@ footer a:hover {
 /* ===== Few items: perfect centering ===== */
 .masonry.few{
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, 260px);
   gap: 16px;
+  justify-content: center;
 
   /* allow up to 3 centered columns */
   width: min(100%, calc(3 * 260px + 2 * 16px));
