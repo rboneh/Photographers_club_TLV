@@ -574,61 +574,119 @@ export function genExhibitionPhotosArr(dir, files = []) {
 }
 
 /**
- * Recursive function to generate exhibition photos DB
+ * Recursively collect member photos, preserving photographer and series names.
+ * The initial call only needs dir; recursive calls also pass files and photographerName.
  * @param {string} dir - starting directory
- * @param {Array} files - array to accumulate photo objects
- * @returns {Array} files- array of photo objects 
- * Each photo object: { name: string, about: string, picture: string }
+ * @param {Array} [files=[]] - shared array to accumulate photo objects during recursion
+ * @param {string|null} [photographerName=null] - photographer name inherited from a parent folder
+ * @returns {Array} Photo objects with name, photographerName, seriesName, about, and picture
  */
-export function genMembersPhotosArr(dir, files = []) {
+export function genMembersPhotosArr(dir, files = [], photographerName = null) {
 
   const fileList = fs.readdirSync(dir);
 
-  // ---- leaf detection ----
-  const hasSubDirs = fileList.some((file) => {
-    if (file.includes(".DS_Store")) return false;
-    const fullPath = path.join(dir, file);
-    return fs.existsSync(fullPath) && fs.statSync(fullPath).isDirectory();
-  });
+  // ---------------------------------------------------------
+  // Read member.txt in the CURRENT folder, if it exists.
+  //
+  // At member level:
+  //   שם = photographer name
+  //
+  // At series level:
+  //   שם = series name
+  // ---------------------------------------------------------
+  const memberTxtFilename = fileList.find(
+    (f) => f.toLowerCase() === "member.txt"
+  );
 
-  // =======================
-  // LEAF FOLDER: read member.txt + collect pictures
-  // =======================
-  if (!hasSubDirs) {
-    // find member.txt (must exist in leaf)
-    const memberTxtName = fileList.find((f) => f.toLowerCase() === "member.txt");
-    if (!memberTxtName) return files;
+  let currentName = "";
+  let currentAbout = "";
 
-    const memberTxtPath = path.join(dir, memberTxtName);
+  if (memberTxtFilename) {
+    const memberTxtPath = path.join(dir, memberTxtFilename);
     const content = fs.readFileSync(memberTxtPath, "utf8");
-
-    let memberName = "";
-    let memberAbout = "";
 
     for (const rawLine of content.split(/\r?\n/)) {
       const line = rawLine.trim();
-      if (line.startsWith("שם:")) memberName = line.replace("שם:", "").trim();
-      else if (line.startsWith("אודות:")) memberAbout = line.replace("אודות:", "").trim();
-    }
 
-    // collect jpg/jpeg in this leaf
+      if (line.startsWith("שם:")) {
+        currentName = line.replace("שם:", "").trim();
+      } else if (line.startsWith("אודות:")) {
+        currentAbout = line.replace("אודות:", "").trim();
+      }
+    }
+  }
+
+  /*
+   * If we don't yet have a photographer name, and this folder
+   * has a member.txt, then this is the photographer's folder.
+   *
+   * If photographerName already exists, currentName belongs
+   * to a series folder.
+   */
+  const effectivePhotographerName =
+    photographerName || currentName || "";
+
+  // ---------------------------------------------------------
+  // Check whether this folder contains subdirectories
+  // ---------------------------------------------------------
+  const hasSubDirs = fileList.some((file) => {
+    if (file.includes(".DS_Store")) return false;
+
+    const fullPath = path.join(dir, file);
+
+    return (
+      fs.existsSync(fullPath) &&
+      fs.statSync(fullPath).isDirectory()
+    );
+  });
+
+
+  // =========================================================
+  // LEAF FOLDER
+  // =========================================================
+  if (!hasSubDirs) {
+
+    /*
+     * If photographerName was already supplied by the parent,
+     * this leaf is a series folder and currentName is the
+     * series name.
+     *
+     * Otherwise this is a normal member folder with no series.
+     */
+    const seriesName =
+      photographerName && currentName
+        ? currentName
+        : "";
+
+    // Collect jpg/jpeg files in this leaf
     for (const file of fileList) {
+
       if (file.includes(".DS_Store")) continue;
       if (file.startsWith("id_")) continue;
       if (file.toLowerCase() === "member.txt") continue;
 
       const lower = file.toLowerCase();
-      if (!lower.endsWith(".jpg") && !lower.endsWith(".jpeg")) continue;
+
+      if (
+        !lower.endsWith(".jpg") &&
+        !lower.endsWith(".jpeg")
+      ) continue;
 
       const fullPath = path.join(dir, file);
 
-      // convert to web path like you did
+      // Convert filesystem path to web path
       const normalized = fullPath.replace(/\\/g, "/");
       const webPath = normalized.split("/public")[1];
 
       files.push({
-        name: memberName,
-        about: memberAbout,
+        // Keep "name" for compatibility with current EJS
+        name: effectivePhotographerName,
+
+        // Explicit fields for future use
+        photographerName: effectivePhotographerName,
+        seriesName: seriesName,
+
+        about: currentAbout,
         picture: webPath,
       });
     }
@@ -636,17 +694,23 @@ export function genMembersPhotosArr(dir, files = []) {
     return files;
   }
 
-  // =======================
-  // NOT LEAF: recurse into subfolders
-  // =======================
+
+  // =========================================================
+  // NOT LEAF — recurse into subfolders
+  // =========================================================
   for (const file of fileList) {
+
     if (file.includes(".DS_Store")) continue;
     if (file.startsWith("id_")) continue;
 
     const name = path.join(dir, file);
 
     if (fs.statSync(name).isDirectory()) {
-      genMembersPhotosArr(name, files);
+      genMembersPhotosArr(
+        name,
+        files,
+        effectivePhotographerName || photographerName
+      );
     }
   }
 
