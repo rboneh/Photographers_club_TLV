@@ -3,7 +3,20 @@ import fs from "fs";
 // import { promises as fsPromises } from "fs";
 import { join } from "path";
 import path from "path";
+import {
+  S3Client,
+  ListObjectsV2Command,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3";
 
+const r2Client = new S3Client({
+  region: "auto",
+  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+  },
+});
 
 /**
  * Recursive function to get jpg all files down the folder tree
@@ -134,6 +147,76 @@ export function genMembersDB(membersKeysArray, membersDir) {
   return membersDB;
 }
 
+/******************************************************************************************
+ * genAboutPicturesFromR2 - Generate picture base for about from R2
+ * @returns 
+ *********************************************************************************************/
+export async function genAboutPicturesFromR2(r2BaseUrl) {
+  const result = await r2Client.send(
+    new ListObjectsV2Command({
+      Bucket: process.env.R2_BUCKET,
+      Prefix: "about_photo_pool/",
+    })
+  );
+
+  const keys = result.Contents?.map((obj) => obj.Key) || [];
+
+  const memberTxtKey = keys.find((key) =>
+    key.toLowerCase().endsWith("/member.txt")
+  );
+
+  if (!memberTxtKey) return [];
+
+  const memberText = await readR2Text(memberTxtKey);
+
+  let photographerName = "";
+  let pictureAbout = "";
+
+  for (const rawLine of memberText.split(/\r?\n/)) {
+    const line = rawLine.trim();
+
+    if (line.startsWith("שם:")) {
+      photographerName = line.replace("שם:", "").trim();
+    } else if (line.startsWith("אודות:")) {
+      pictureAbout = line.replace("אודות:", "").trim();
+    }
+  }
+
+  const imageKeys = keys.filter((key) => {
+    const lower = key.toLowerCase();
+
+    return (
+      (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) &&
+      !lower.split("/").pop().startsWith("id_")
+    );
+  });
+
+  return imageKeys.map((key) => ({
+    name: photographerName,
+    photographerName: photographerName,
+    seriesName: "",
+    about: pictureAbout,
+    picture: `${r2BaseUrl}/${key}`,
+  }));
+}
+
+/**
+ * Helper to read text files from R2
+ * @param {*} key 
+ * @returns 
+ */
+export async function readR2Text(key) {
+  const result = await r2Client.send(
+    new GetObjectCommand({
+      Bucket: process.env.R2_BUCKET,
+      Key: key,
+    })
+  );
+
+  return await result.Body.transformToString();
+}
+
+
 /**
  * genExhibitionsDB(exhibitionsListArr, exhibitionDir)
 
@@ -225,7 +308,7 @@ export function genExhibitionsDB(exhibitionsListArr, exhibitionDir) {
     exhibitiosDB[exhibition] = currentExhbitionDB;
   }
   const dbKeys = Object.keys(exhibitiosDB);
-  console.log(dbKeys);
+  // console.log(dbKeys);
   return exhibitiosDB;
 }
 
@@ -392,12 +475,12 @@ function parseMemberTxt(text) {
  * @returns 
  */
 export function genExhibitsionsDB4Carousel(exhibistinsDB) {
-  console.log("\n\nGenerating exhibitionsDB4Carousel...");
+  // console.log("\n\nGenerating exhibitionsDB4Carousel...");
 
   const exhibitionsCarouselDB = {};
 
   for (const [exhibitionKey, exhibitionObj] of Object.entries(exhibistinsDB)) {
-    console.log("exhibitionKey: ", exhibitionKey, "\nexhibitionObj:", Object.keys(exhibitionObj));
+    // console.log("exhibitionKey: ", exhibitionKey, "\nexhibitionObj:", Object.keys(exhibitionObj));
 
     const exhibitionDB = {};
     exhibitionDB.exhibitionName = exhibitionObj.exhibitionName;
@@ -415,7 +498,7 @@ export function genExhibitsionsDB4Carousel(exhibistinsDB) {
 
 
 export function genExhibitsionsDB4Grid(exhibitionsDB4Carousel) {
-  console.log("\n\nGenerating exhibitionsDB4Grid...");
+  // console.log("\n\nGenerating exhibitionsDB4Grid...");
   const exhibitionsDB4Grid = exhibitionsDB4Carousel; // No copy.. Just for readability. We will add membersArr to each exhibition object in place.
 
 
@@ -573,15 +656,17 @@ export function genExhibitionPhotosArr(dir, files = []) {
   return files;
 }
 
-/**
+/****************************************************************************************************
  * Recursively collect member photos, preserving photographer and series names.
  * The initial call only needs dir; recursive calls also pass files and photographerName.
  * @param {string} dir - starting directory
  * @param {Array} [files=[]] - shared array to accumulate photo objects during recursion
  * @param {string|null} [photographerName=null] - photographer name inherited from a parent folder
  * @returns {Array} Photo objects with name, photographerName, seriesName, about, and picture
- */
-export function genMembersPhotosArr(dir, files = [], photographerName = null) {
+ ******************************************************************************************************/
+//export function genMembersPhotosArr(dir, files = [], photographerName = null) {
+
+export function genMembersPhotosArr(dir, files = [], photographerName = null, imageBaseUrl = "") {
 
   const fileList = fs.readdirSync(dir);
 
@@ -676,7 +761,12 @@ export function genMembersPhotosArr(dir, files = [], photographerName = null) {
 
       // Convert filesystem path to web path
       const normalized = fullPath.replace(/\\/g, "/");
-      const webPath = normalized.split("/public")[1];
+      const localWebPath = normalized.split("/public")[1];
+
+      // If Cloudflare base URL exists, use it
+      const webPath = imageBaseUrl
+        ? `${imageBaseUrl}${localWebPath}`
+        : localWebPath;
 
       files.push({
         // Keep "name" for compatibility with current EJS
@@ -709,7 +799,8 @@ export function genMembersPhotosArr(dir, files = [], photographerName = null) {
       genMembersPhotosArr(
         name,
         files,
-        effectivePhotographerName || photographerName
+        effectivePhotographerName || photographerName,
+        imageBaseUrl
       );
     }
   }

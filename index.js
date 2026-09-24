@@ -6,24 +6,22 @@ import { fileURLToPath } from "url"; // to get __dirname in ES module
 import fs from "fs/promises"; // promise-based fs
 import { Resend } from "resend"; // email sending service
 import helmet from "helmet"; // security middleware
-
 import * as u from "./public/utilities.js"; // custom utilities
 
 
 
 // __dirname setup for ES modules
 const __dirname = dirname(fileURLToPath(import.meta.url));
-console.log("__dirname:", __dirname);
+// console.log("__dirname:", __dirname);
 
 const membersDir = path.join(__dirname, "public", "members");
 const photoPoolDir = path.join(__dirname, "public", "photo_pool");
 const exhibitionDir = path.join(__dirname, "public", "exhibitions");
-const aboutPicturesDirs = path.join(__dirname, "public", "about_photo_pool");
 
 const resend = new Resend(process.env.RESEND_API_KEY); // for email sending (if needed)
 
-const baseUrl =
-  process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
+const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
+const r2BaseUrl = process.env.R2_BASE_URL;
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -67,6 +65,7 @@ app.use(
         "'self'",
         "https://picsum.photos",
         "https://fastly.picsum.photos",
+        "https://pub-28a1c01f955542de88b34d656ef6375f.r2.dev", //for cloudflare
         "data:",
       ],
       frameSrc: [
@@ -108,18 +107,20 @@ const init = async () => {
   const membersList = await safeReadDirNames(membersDir);
   const photoPoolList = await safeReadDirNames(photoPoolDir);
   const exhibitionsList = await safeReadDirNames(exhibitionDir);
-  const aboutPicturesList = await safeReadDirNames(aboutPicturesDirs);
+  const aboutPicturesArr4Carousel = await u.genAboutPicturesFromR2(r2BaseUrl);
 
-  console.log("membersList:", membersList);
-  console.log("photoPoolList:", photoPoolList);
-  console.log("exhibitionsList:", exhibitionsList);
-  console.log("aboutPicturesList:", aboutPicturesList);
+
+  // console.lg("First about picture URL:", aboutPicturesArr4Carousel[0]?.picture);
+  // console.log("membersList:", membersList);
+  // console.log("photoPoolList:", photoPoolList);
+  // console.log("exhibitionsList:", exhibitionsList);
+  // console.log("aboutPicturesList:", aboutPicturesList);
+  // console.log("ABOUT FROM R2:", aboutPicturesArr4Carousel);
 
 
   // photos
   // const membersPhotos = u.getFiles(membersDir); //getFiles is synchronous read. Need to be change to async. 
   // console.log("Members Photos count:", membersPhotos.length);
-
 
   /**
    * members DB (now membersList is ready) - array of member objects with all info needed for member cards and pages
@@ -151,7 +152,7 @@ const init = async () => {
    */
   const membersDB = u.genMembersDB(membersList, membersDir);
   // const photoPoolDB = u.genMembersDB(photoPoolList, photoPoolDir);
-  console.log("membersDB size:", membersDB.length);
+  // console.log("membersDB size:", membersDB.length);
 
   /**
    * membersPhotosArr4Carousel - flat array of photo objects for all members, used for homepage carousel
@@ -172,23 +173,23 @@ const init = async () => {
    * ]
    */
   const membersPhotosArr4Carousel = u.genMembersPhotosArr(membersDir);
-  console.log("membersPhotosArr4Carousel size:", membersPhotosArr4Carousel.length);
+  // console.log("membersPhotosArr4Carousel size:", membersPhotosArr4Carousel.length);
 
   const photoPoolPhotosArr4Carousel = u.genMembersPhotosArr(photoPoolDir);
-  console.log("photoPoolPhotosArr4Carousel size:", photoPoolPhotosArr4Carousel.length);
+  // console.log("photoPoolPhotosArr4Carousel size:", photoPoolPhotosArr4Carousel.length);
 
-  const aboutPicturesArr4Carousel = u.genMembersPhotosArr(aboutPicturesDirs);
-  console.log("aboutPicturesArr4Carousel size:", aboutPicturesArr4Carousel.length);
+  // const aboutPicturesList = await safeReadDirNames(aboutPicturesDirs);
+  // console.log("aboutPicturesArr4Carousel size:", aboutPicturesArr4Carousel.length);
 
   // exhibitionsDB (now exhibitionsList is ready) for use to create exhibition page
   const exhibitionsDB = u.genExhibitionsDB(exhibitionsList, exhibitionDir);
-  console.log("exhibitionsDB size:", Object.keys(exhibitionsDB).length);
+  // console.log("exhibitionsDB size:", Object.keys(exhibitionsDB).length);
 
   const exhibitionsDB4Carousel = u.genExhibitsionsDB4Carousel(exhibitionsDB);
-  console.log("exhibitionsDB4Carousel size:", Object.keys(exhibitionsDB4Carousel).length);
+  // console.log("exhibitionsDB4Carousel size:", Object.keys(exhibitionsDB4Carousel).length);
 
   const exhibitionsDB4Grid = u.genExhibitsionsDB4Grid(exhibitionsDB4Carousel);
-  console.log("exhibitionsDB4Grid size:", Object.keys(exhibitionsDB4Grid).length);
+  // console.log("exhibitionsDB4Grid size:", Object.keys(exhibitionsDB4Grid).length);
 
   // make exhibitionsList available to all EJS views
   app.use((req, res, next) => {
@@ -256,8 +257,10 @@ ${urls
   });
 
 
+  //==============================================================================================================
+  ///////////////// ---------- Routes ------------------------------------------------//////////////////////////
+  //==============================================================================================================
 
-  ///////////////// ---------- Routes -------------------------//////////////////////////
   app.get(["/", "/home"], (req, res) => {
     const shuffeldPhotoObjArr = u.shuffleArray([...membersPhotosArr4Carousel]);
     // const shuffeldPhotoObjArr = u.shuffleArray([...photoPoolPhotosArr4Carousel]); // avoid mutating original
@@ -310,7 +313,7 @@ ${urls
   app.get("/member/:key", (req, res) => {
     const memberKey = req.params.key;
 
-    console.log("Member requested:", memberKey);
+    // console.log("Member requested:", memberKey);
 
     const member = membersDB.find(m => m.key === memberKey);
 
@@ -318,7 +321,7 @@ ${urls
       return res.status(404).send("Member not found");
     }
 
-    console.log(u.youtubeEmbed(member.videoURL));
+    // console.log(u.youtubeEmbed(member.videoURL));
     res.render("pages/member-page-grid.ejs", {
       member: member,
       pageTitle: `${member.memberName} | מועדון הצילום תל אביב`,
@@ -372,7 +375,7 @@ ${urls
    */
   app.post("/contact", async (req, res) => {
     const { name, email, message } = req.body;
-    console.log("POST /contact hit", req.body);
+    // console.log("POST /contact hit", req.body);
 
     const to = process.env.CONTACT_EMAIL;
     if (!to) {
@@ -389,7 +392,7 @@ ${urls
         text: `From: ${name} <${email}>\n\n${message}`,
       });
 
-      console.log("Resend result:", result);
+      // console.log("Resend result:", result);
       return res.redirect("/about?sent=1");
     } catch (err) {
       console.error("Resend error:", err);
@@ -403,7 +406,7 @@ ${urls
 
   // ---------- Start server ----------
   app.listen(port, () => {
-    console.log(`Listening on port ${port}`);
+    // console.log(`Listening on port ${port}`);
   });
 };
 
