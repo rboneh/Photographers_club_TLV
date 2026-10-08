@@ -9,6 +9,18 @@ import {
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
 
+
+/*******************************************************************************************
+ * Initialize Cloudflare R2 client using AWS SDK v3
+ * The R2 client is configured with the account ID, access key, and secret key from environment variables.
+ * The endpoint is constructed using the R2 account ID.
+ * This client can be used to interact with Cloudflare R2 storage, such as listing objects, getting objects, etc.
+ * 
+ * Note: Ensure that the following environment variables are set:
+ * - R2_ACCOUNT_ID
+ * - R2_ACCESS_KEY_ID
+ * - R2_SECRET_ACCESS_KEY   
+ */
 const r2Client = new S3Client({
   region: "auto",
   endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
@@ -17,6 +29,23 @@ const r2Client = new S3Client({
     secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
   },
 });
+
+
+/**********************************************************************
+ *  List all keys in a Cloudflare R2 bucket with a given prefix.
+ * @param {*} prefix 
+ * @returns 
+ ***********************************************************************/
+export async function listR2Keys(prefix) {
+  const result = await r2Client.send(
+    new ListObjectsV2Command({
+      Bucket: process.env.R2_BUCKET,
+      Prefix: prefix,
+    })
+  );
+
+  return result.Contents?.map((obj) => obj.Key) || [];
+}
 
 /**
  * Recursive function to get jpg all files down the folder tree
@@ -56,6 +85,12 @@ export function getJpgFilesRec(dir, files = []) {
   return files;
 }
 
+
+/**
+ * Get names of all directories within a given path
+ * @param {string} dirPath - Path to the directory
+ * @returns {Array} - Array of directory names  
+ */
 export function getDirNames(dirPath) {
   try {
     const dirEntries = fs.readdirSync(dirPath, { withFileTypes: true });
@@ -147,11 +182,158 @@ export function genMembersDB(membersKeysArray, membersDir) {
   return membersDB;
 }
 
-/******************************************************************************************
- * genAboutPicturesFromR2 - Generate picture base for about from R2
+/**************************************************************************************************
+ *  Generate members database from Cloudflare R2 storage.
+ * @param {*} membersList 
+ * @param {*} memberKeys 
+ * @param {*} r2BaseUrl 
  * @returns 
- *********************************************************************************************/
+ **************************************************************************/
+export async function genMembersDBFromR2(
+  membersList,
+  memberKeys,
+  r2BaseUrl
+) {
+  const membersDB = [];
+
+  for (const memberFolder of membersList) {
+    const memberPrefix = `members/${memberFolder}/`;
+
+    const memberTxtKey = memberKeys.find(
+      (key) =>
+        key.startsWith(memberPrefix) &&
+        key.toLowerCase() === `${memberPrefix}member.txt`.toLowerCase()
+    );
+
+    if (!memberTxtKey) continue;
+
+    const memberText = await readR2Text(memberTxtKey);
+
+    const {
+      memberName,
+      memberAbout,
+      videoURL,
+      series,
+    } = parseMemberTxt(memberText);
+
+    const idPhotoKey = memberKeys.find((key) => {
+      if (!key.startsWith(memberPrefix)) return false;
+
+      const relativePath = key.slice(memberPrefix.length);
+
+      // only files directly inside the member folder
+      if (relativePath.includes("/")) return false;
+
+      const lower = relativePath.toLowerCase();
+
+      return lower.startsWith("id_") &&
+        (lower.endsWith(".jpg") || lower.endsWith(".jpeg"));
+    });
+
+    //managing photos directly inside the member folder (not in series subfolders)
+    const memberPhotoKeys = memberKeys.filter((key) => {
+      if (!key.startsWith(memberPrefix)) return false;
+
+      const relativePath = key.slice(memberPrefix.length);
+
+      // only photos directly inside the member folder
+      if (relativePath.includes("/")) return false;
+
+      const lower = relativePath.toLowerCase();
+
+      return (
+        (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) &&
+        !lower.startsWith("id_")
+      );
+    });
+
+    const photos = memberPhotoKeys.map(
+      (key) => `${r2BaseUrl}/${key}`
+    );
+
+    // managing series subfolders
+    const seriesFolders = [
+      ...new Set(
+        memberKeys
+          .filter((key) => key.startsWith(memberPrefix))
+          .map((key) => key.slice(memberPrefix.length).split("/")[0])
+          .filter((part) => part && !part.includes("."))
+      )
+    ];
+
+    
+    const memberSeries = {};
+
+    // iterate over series folders
+    for (const seriesFolder of seriesFolders) {
+      const seriesPrefix = `${memberPrefix}${seriesFolder}/`;
+
+      const seriesMemberTxtKey = memberKeys.find(
+        (key) =>
+          key.toLowerCase() ===
+          `${seriesPrefix}member.txt`.toLowerCase()
+      );
+
+      if (!seriesMemberTxtKey) continue;
+
+      const seriesText = await readR2Text(seriesMemberTxtKey);
+
+      const {
+        memberName: seriesName,
+        memberAbout: seriesAbout,
+      } = parseMemberTxt(seriesText);
+
+      const seriesPhotoKeys = memberKeys.filter((key) => {
+        if (!key.startsWith(seriesPrefix)) return false;
+
+        const relativePath = key.slice(seriesPrefix.length);
+
+        if (relativePath.includes("/")) return false;
+
+        const lower = relativePath.toLowerCase();
+
+        return (
+          (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) &&
+          !lower.startsWith("id_")
+        );
+      });
+
+      memberSeries[seriesFolder] = {
+        key: memberFolder,
+        photos: seriesPhotoKeys.map(
+          (key) => `${r2BaseUrl}/${key}`
+        ),
+        seriesName,
+        seriesAbout,
+      };
+    }
+
+    membersDB.push({
+      key: memberFolder,
+      idPhoto: idPhotoKey
+        ? `${r2BaseUrl}/${idPhotoKey}`
+        : null,
+      photos: photos,
+      memberName,
+      memberAbout,
+      videoURL,
+      series: memberSeries || null,
+    });
+
+  }
+
+  return membersDB;
+}
+
+
+
+/*******************************************************************************************
+ * Generates an array of about pictures from R2
+ * @param {*} r2BaseUrl 
+ * @returns 
+ ********************************************************************************************/
 export async function genAboutPicturesFromR2(r2BaseUrl) {
+
   const result = await r2Client.send(
     new ListObjectsV2Command({
       Bucket: process.env.R2_BUCKET,
@@ -200,11 +382,11 @@ export async function genAboutPicturesFromR2(r2BaseUrl) {
   }));
 }
 
-/**
+/*********************************************************************************************
  * Helper to read text files from R2
  * @param {*} key 
  * @returns 
- */
+ ********************************************************************************************/
 export async function readR2Text(key) {
   const result = await r2Client.send(
     new GetObjectCommand({
@@ -216,8 +398,184 @@ export async function readR2Text(key) {
   return await result.Body.transformToString();
 }
 
-
 /**
+ *  Generate photo pool from R2 
+ * @param {*} r2BaseUrl 
+ * @returns 
+ */
+export async function genPhotoPoolFromR2(r2BaseUrl) {
+  const result = await r2Client.send(
+    new ListObjectsV2Command({
+      Bucket: process.env.R2_BUCKET,
+      Prefix: "photo_pool/",
+    })
+  );
+
+  const keys = result.Contents?.map((obj) => obj.Key) || [];
+  const photos = [];
+
+  const memberTxtKeys = keys.filter((key) =>
+    key.toLowerCase().endsWith("/member.txt")
+  );
+
+  for (const memberTxtKey of memberTxtKeys) {
+    const memberText = await readR2Text(memberTxtKey);
+
+    const {
+      memberName,
+      memberAbout,
+    } = parseMemberTxt(memberText);
+
+    const folderPrefix =
+      memberTxtKey.substring(0, memberTxtKey.lastIndexOf("/") + 1);
+
+    const imageKeys = keys.filter((key) => {
+      if (!key.startsWith(folderPrefix)) return false;
+
+      const fileName = key.split("/").pop();
+      const lower = fileName.toLowerCase();
+
+      return (
+        (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) &&
+        !lower.startsWith("id_")
+      );
+    });
+
+    for (const key of imageKeys) {
+      photos.push({
+        name: memberName,
+        photographerName: memberName,
+        seriesName: "",
+        about: memberAbout,
+        picture: `${r2BaseUrl}/${key}`,
+      });
+    }
+  }
+
+  return photos;
+}
+
+/***********************************************************************************************
+ *  Generate members photos array from R2 storage.  
+ * 
+ * @param {*} membersList 
+ * @param {*} memberKeys 
+ * @param {*} r2BaseUrl 
+ * @returns 
+ ***********************************************************************************************/
+export async function genMembersPhotosArrFromR2(
+  membersList,
+  memberKeys,
+  r2BaseUrl
+) {
+  const photos = [];
+
+  for (const memberFolder of membersList) {
+    const memberPrefix = `members/${memberFolder}/`;
+
+    const memberTxtKey = memberKeys.find(
+      (key) =>
+        key.toLowerCase() ===
+        `${memberPrefix}member.txt`.toLowerCase()
+    );
+
+    if (!memberTxtKey) continue;
+
+    const memberText = await readR2Text(memberTxtKey);
+
+    const {
+      memberName,
+      memberAbout,
+    } = parseMemberTxt(memberText);
+
+    const directImageKeys = memberKeys.filter((key) => {
+      if (!key.startsWith(memberPrefix)) return false;
+
+      const relativePath = key.slice(memberPrefix.length);
+
+      if (relativePath.includes("/")) return false;
+
+      const lower = relativePath.toLowerCase();
+
+      return (
+        (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) &&
+        !lower.startsWith("id_")
+      );
+    });
+
+    for (const key of directImageKeys) {
+      photos.push({
+        name: memberName,
+        photographerName: memberName,
+        seriesName: "",
+        about: memberAbout,
+        picture: `${r2BaseUrl}/${key}`,
+      });
+    }
+
+    const seriesFolders = [
+      ...new Set(
+        memberKeys
+          .filter((key) => key.startsWith(memberPrefix))
+          .map((key) => {
+            const relativePath = key.slice(memberPrefix.length);
+            const parts = relativePath.split("/");
+
+            return parts.length > 1 ? parts[0] : null;
+          })
+          .filter(Boolean)
+      ),
+    ];
+
+    for (const seriesFolder of seriesFolders) {
+      const seriesPrefix = `${memberPrefix}${seriesFolder}/`;
+
+      const seriesMemberTxtKey = memberKeys.find(
+        (key) =>
+          key.toLowerCase() ===
+          `${seriesPrefix}member.txt`.toLowerCase()
+      );
+
+      if (!seriesMemberTxtKey) continue;
+
+      const seriesText = await readR2Text(seriesMemberTxtKey);
+
+      const {
+        memberName: seriesName,
+        memberAbout: seriesAbout,
+      } = parseMemberTxt(seriesText);
+
+      const seriesImageKeys = memberKeys.filter((key) => {
+        if (!key.startsWith(seriesPrefix)) return false;
+
+        const relativePath = key.slice(seriesPrefix.length);
+
+        if (relativePath.includes("/")) return false;
+
+        const lower = relativePath.toLowerCase();
+
+        return (
+          (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) &&
+          !lower.startsWith("id_")
+        );
+      });
+
+      for (const key of seriesImageKeys) {
+        photos.push({
+          name: memberName,
+          photographerName: memberName,
+          seriesName,
+          about: seriesAbout,
+          picture: `${r2BaseUrl}/${key}`,
+        });
+      }
+    }
+  }
+
+  return photos;
+}
+
+/*************************************************************************************
  * genExhibitionsDB(exhibitionsListArr, exhibitionDir)
 
  * @param {Array} exhibitionsListArr - array of exhibition names      
@@ -277,7 +635,7 @@ export async function readR2Text(key) {
  *   } 
  *  ,  
  * }
- */
+ **************************************************************************************/
 export function genExhibitionsDB(exhibitionsListArr, exhibitionDir) {
   const exhibitiosDB = {};
 
@@ -449,29 +807,10 @@ function parseMemberTxt(text) {
   return { memberName, memberAbout, videoURL, shuffle, series };
 }
 
+
 /**
- * Generate exhibitionsDB4Carousel - a simplified version of exhibitionsDB with only the info needed for the carousel and exhibition page
- * Each exhibition object in exhibitionsDB4Carousel includes:
- * - exhibitionName: from info.txt (or directory name if no info.txt)
- * - exhibitionAbout: from info.txt (or empty string if no info.txt)
- * - exhibitionPhotosArr: array of photo objects for this exhibition, each with name, about, picture
- * exhibitionsDB4Carousel structure:
- * {
- *   "exhibition1Key": {
- *     exhibitionName: "Exhibition 1",
- *     exhibitionAbout: "About Exhibition 1",
- *     exhibitionPhotosArr: [
- *       {
- *         name: "Member Name",
- *         about: "Member About",
- *         picture: "/path/to/photo.jpg"
- *       },
- *       ...
- *     ]
- *   },
- *   ...
- * }
- * @param {*} exhibistinsDB 
+ *  Generate exhibitions DB for carousel view     
+ *  * @param {*} exhibistinsDB 
  * @returns 
  */
 export function genExhibitsionsDB4Carousel(exhibistinsDB) {

@@ -12,10 +12,8 @@ import * as u from "./public/utilities.js"; // custom utilities
 
 // __dirname setup for ES modules
 const __dirname = dirname(fileURLToPath(import.meta.url));
-// console.log("__dirname:", __dirname);
-
-const membersDir = path.join(__dirname, "public", "members");
-const photoPoolDir = path.join(__dirname, "public", "photo_pool");
+// const membersDir = path.join(__dirname, "public", "members");
+// const photoPoolDir = path.join(__dirname, "public", "photo_pool");
 const exhibitionDir = path.join(__dirname, "public", "exhibitions");
 
 const resend = new Resend(process.env.RESEND_API_KEY); // for email sending (if needed)
@@ -86,6 +84,8 @@ app.set("views", path.join(__dirname, "views"));
 
 // ---------- Load data BEFORE routes/server ----------
 
+
+
 /**
  * safeReadDirNames - read directory names safely, return empty array on error
  * Use to read members and exhibitions directories, filter out .DS_Store files
@@ -104,92 +104,50 @@ const safeReadDirNames = async (dirPath) => {
 
 const init = async () => {
   // lists
-  const membersList = await safeReadDirNames(membersDir);
-  const photoPoolList = await safeReadDirNames(photoPoolDir);
+  // const membersList = await safeReadDirNames(membersDir);
+  // const photoPoolList = await safeReadDirNames(photoPoolDir);
   const exhibitionsList = await safeReadDirNames(exhibitionDir);
   const aboutPicturesArr4Carousel = await u.genAboutPicturesFromR2(r2BaseUrl);
-
-
-  // console.lg("First about picture URL:", aboutPicturesArr4Carousel[0]?.picture);
-  // console.log("membersList:", membersList);
-  // console.log("photoPoolList:", photoPoolList);
-  // console.log("exhibitionsList:", exhibitionsList);
-  // console.log("aboutPicturesList:", aboutPicturesList);
-  // console.log("ABOUT FROM R2:", aboutPicturesArr4Carousel);
-
-
-  // photos
-  // const membersPhotos = u.getFiles(membersDir); //getFiles is synchronous read. Need to be change to async. 
-  // console.log("Members Photos count:", membersPhotos.length);
-
-  /**
-   * members DB (now membersList is ready) - array of member objects with all info needed for member cards and pages
-   * Each member object includes:
-   * - key: unique identifier derived from directory name (e.g. "member1")
-   * - memberName: from info.json (or directory name if no info.json)
-   * - memberAbout: from info.json (or empty string if no info.json)
-   * - memberPhoto: from info.json or first photo in directory (or placeholder if none)
-   * - memberDir: path to member's directory (for linking to member page)
-   * - photos: array of photo objects for this member, each with filename and URL
-   * membersDB structure:
-   * [
-   *   {
-   *     key: "member1", // derived from directory name, e.g. "member1"
-   *     memberName: "John Doe", // from info.json
-   *     memberAbout: "Bio text...", // from info.json
-   *     memberPhoto: "https://example.com/photo.jpg", // from info.json or first photo in directory
-   *     memberDir: "/public/members/member1", // path to member's directory
-   *     photo s: [ // array of photo objects for this member
-   *       {
-   *         filename: "photo1.jpg",
-   *         url: "/members/member1/photo1.jpg"
-   *       },
-   *       ...
-   *     ]
-   *   },
-   *   ...
-   * ]
-   */
-  const membersDB = u.genMembersDB(membersList, membersDir);
-  // const photoPoolDB = u.genMembersDB(photoPoolList, photoPoolDir);
-  // console.log("membersDB size:", membersDB.length);
-
-  /**
-   * membersPhotosArr4Carousel - flat array of photo objects for all members, used for homepage carousel
-   * Each photo object  includes:
-   * - memberKey: to link back to member page
-   * - memberName: for alt text and potential captions
-   * - filename: original filename of the photo
-   * - url: URL to access the photo (e.g. "/members/member1/photo1.jpg")
-   * membersPhotosArr4Carousel structure:
-   * [
-   *   {
-   *     memberKey: "member1",
-   *     memberName: "John Doe",
-   *     filename: "photo1.jpg",
-   *     url: "/members/member1/photo1.jpg"
-   *   },
-   *   ...
-   * ]
-   */
-  const membersPhotosArr4Carousel = u.genMembersPhotosArr(membersDir);
-  // console.log("membersPhotosArr4Carousel size:", membersPhotosArr4Carousel.length);
-
-  const photoPoolPhotosArr4Carousel = u.genMembersPhotosArr(photoPoolDir);
-  // console.log("photoPoolPhotosArr4Carousel size:", photoPoolPhotosArr4Carousel.length);
-
-  // const aboutPicturesList = await safeReadDirNames(aboutPicturesDirs);
-  // console.log("aboutPicturesArr4Carousel size:", aboutPicturesArr4Carousel.length);
-
-  // exhibitionsDB (now exhibitionsList is ready) for use to create exhibition page
+  // const membersDB = u.genMembersDB(membersList, membersDir);
+  // const membersPhotosArr4Carousel = u.genMembersPhotosArr(membersDir);
+  // const photoPoolPhotosArr4Carousel = u.genMembersPhotosArr(photoPoolDir);
+  // const photoPoolPhotosArr4Carousel = await u.genPhotoPoolFromR2(r2BaseUrl);
   const exhibitionsDB = u.genExhibitionsDB(exhibitionsList, exhibitionDir);
-  // console.log("exhibitionsDB size:", Object.keys(exhibitionsDB).length);
-
   const exhibitionsDB4Carousel = u.genExhibitsionsDB4Carousel(exhibitionsDB);
-  // console.log("exhibitionsDB4Carousel size:", Object.keys(exhibitionsDB4Carousel).length);
-
   const exhibitionsDB4Grid = u.genExhibitsionsDB4Grid(exhibitionsDB4Carousel);
-  // console.log("exhibitionsDB4Grid size:", Object.keys(exhibitionsDB4Grid).length);
+  const memberKeys = await u.listR2Keys("members/");
+  // console.log(memberKeys);
+  const membersListFromR2 = [
+    ...new Set(
+      memberKeys
+        .map((key) => key.split("/")[1])
+        .filter(Boolean)
+    )
+  ];
+  
+  const membersDBFromR2 =
+    await u.genMembersDBFromR2(
+      membersListFromR2,
+      memberKeys,
+      r2BaseUrl
+    );
+
+  const membersDB =
+    await u.genMembersDBFromR2(
+      membersListFromR2,
+      memberKeys,
+      r2BaseUrl
+    );
+
+  const membersPhotosArr4Carousel =
+    await u.genMembersPhotosArrFromR2(
+      membersListFromR2,
+      memberKeys,
+      r2BaseUrl
+    );
+
+  // console.log("membersDBFromR2:", membersDBFromR2);
+
 
   // make exhibitionsList available to all EJS views
   app.use((req, res, next) => {
@@ -263,7 +221,6 @@ ${urls
 
   app.get(["/", "/home"], (req, res) => {
     const shuffeldPhotoObjArr = u.shuffleArray([...membersPhotosArr4Carousel]);
-    // const shuffeldPhotoObjArr = u.shuffleArray([...photoPoolPhotosArr4Carousel]); // avoid mutating original
     res.render("pages/index.ejs", {
       membersPhotos: null,
       picturesList: null,
