@@ -1,14 +1,8 @@
-import e from "express";
-import fs from "fs";
-// import { promises as fsPromises } from "fs";
-import { join } from "path";
-import path from "path";
 import {
   S3Client,
   ListObjectsV2Command,
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
-
 
 /*******************************************************************************************
  * Initialize Cloudflare R2 client using AWS SDK v3
@@ -30,7 +24,6 @@ const r2Client = new S3Client({
   },
 });
 
-
 /**********************************************************************
  *  List all keys in a Cloudflare R2 bucket with a given prefix.
  * @param {*} prefix 
@@ -45,141 +38,6 @@ export async function listR2Keys(prefix) {
   );
 
   return result.Contents?.map((obj) => obj.Key) || [];
-}
-
-/**
- * Recursive function to get jpg all files down the folder tree
- * @param {string} dir - starting directory
- * @param {Array} files - array to accumulate file paths
- * @returns {Array} files- array of file paths 
- * 
- * getFiles is synchronous read. Need to be change to async. 
- */
-export function getJpgFilesRec(dir, files = []) {
-  const fileList = fs.readdirSync(dir);
-
-  for (const file of fileList) {
-    // ⛔ ignore macOS metadata files
-    if (file.includes(".DS_Store")) continue;
-
-    // ⛔ ignore id_ files files
-    if (file.startsWith("id_")) continue;
-
-    const name = `${dir}/${file}`;
-    // This is the recursive part. If the file is a directory,
-    // we call the same function again
-    if (fs.statSync(name).isDirectory()) {
-      getJpgFilesRec(name, files);
-    } else {
-      // only keep .jpg / .JPG / .jpeg (optional)
-      const lower = file.toLowerCase();
-      if (!lower.endsWith(".jpg") && !lower.endsWith(".jpeg")) continue;
-
-      // convert to web path
-      const normalized = name.replace(/\\/g, "/"); // for Windows compatibility
-      const webPath = normalized.split("/public")[1];
-      files.push(webPath);
-    }
-  }
-
-  return files;
-}
-
-
-/**
- * Get names of all directories within a given path
- * @param {string} dirPath - Path to the directory
- * @returns {Array} - Array of directory names  
- */
-export function getDirNames(dirPath) {
-  try {
-    const dirEntries = fs.readdirSync(dirPath, { withFileTypes: true });
-
-    return dirEntries
-      .filter((dirent) => dirent.isDirectory())
-      .map((dirent) => dirent.name);
-  } catch (err) {
-    console.error(`Error reading directory: ${dirPath}`, err);
-    return [];
-  }
-}
-
-/**
- *genMembersDB generate db in the form of
- {key: string, memberName: string, memberAbout: stringphotos: Array}
- * @param   {Array} membersKeysArray - array of member keys
- * @param   {string} membersDir - path to members directory
- * @returns {Array} - members database array
- */
-export function genMembersDB(membersKeysArray, membersDir) {
-  const membersDB = [];
-
-  membersKeysArray.forEach(memberKey => {
-    const memberDirPath = join(membersDir, memberKey);
-
-    // תמונות רגילות (id_ מסונן כבר ב-getFiles)
-    const memberPhotos = getJpgFilesRec(memberDirPath);
-
-    /* 
-    /* if there are series subfolders, we will add them to the memberData as an object of arrays of photos, 
-    /* each array for a series. The key of each array will be the name of the series 
-    /* (the name of the subfolder).
-    */
-    const seriesDirs = getDirNames(memberDirPath);
-    const memberSeries = {};
-    if (seriesDirs.length > 0) {
-      seriesDirs.forEach(seriesDir => {
-        const seriesDirPath = join(memberDirPath, seriesDir);
-        const seriesPhotos = getJpgFilesRec(seriesDirPath);
-
-
-        const { memberName: seriesName, memberAbout: seriesAbout } = readMemberTxtIfExists(seriesDirPath);
-
-        const seriesData = {
-          key: memberKey,
-          photos: seriesPhotos,
-          seriesName: seriesName,
-          seriesAbout: seriesAbout,
-        };
-        memberSeries[seriesDir] = seriesData;
-      });
-    }
-
-    // חיפוש id_*.jpg ישירות בתיקייה
-    let idPhoto = null;
-    const allFiles = fs.readdirSync(memberDirPath);
-
-    const idFile = allFiles.find(file =>
-      file.toLowerCase().startsWith("id_") &&
-      file.toLowerCase().endsWith(".jpg")
-    );
-
-    if (idFile) {
-      // בניית נתיב מלא מה־/members/...
-      const fullPath = join(memberDirPath, idFile)
-        .replace(/\\/g, "/")           // תאימות Windows
-        .split("/public")[1];          // חיתוך עד /members
-
-      idPhoto = fullPath;
-    }
-
-    //{memberName: string, memberAbout: string,  videoURL: string, shuffle: string, series: string}
-    const { memberName: memberName, memberAbout: memberAbout, videoURL: videoURL, series: series } = readMemberTxtIfExists(memberDirPath);
-
-    const memberData = {
-      key: memberKey,
-      idPhoto: idPhoto,        // 👈 הנתיב המלא של תמונת ה-ID
-      photos: memberPhotos,
-      memberName: memberName,
-      memberAbout: memberAbout,
-      videoURL: videoURL,
-      series: memberSeries || null,   // אם יש תיקיות משנה, נוסיף את המידע שלהן
-    };
-
-    membersDB.push(memberData);
-  });
-
-  return membersDB;
 }
 
 /**************************************************************************************************
@@ -261,7 +119,6 @@ export async function genMembersDBFromR2(
       )
     ];
 
-    
     const memberSeries = {};
 
     // iterate over series folders
@@ -324,8 +181,6 @@ export async function genMembersDBFromR2(
 
   return membersDB;
 }
-
-
 
 /*******************************************************************************************
  * Generates an array of about pictures from R2
@@ -396,63 +251,6 @@ export async function readR2Text(key) {
   );
 
   return await result.Body.transformToString();
-}
-
-/**
- *  Generate photo pool from R2 
- * @param {*} r2BaseUrl 
- * @returns 
- */
-export async function genPhotoPoolFromR2(r2BaseUrl) {
-  const result = await r2Client.send(
-    new ListObjectsV2Command({
-      Bucket: process.env.R2_BUCKET,
-      Prefix: "photo_pool/",
-    })
-  );
-
-  const keys = result.Contents?.map((obj) => obj.Key) || [];
-  const photos = [];
-
-  const memberTxtKeys = keys.filter((key) =>
-    key.toLowerCase().endsWith("/member.txt")
-  );
-
-  for (const memberTxtKey of memberTxtKeys) {
-    const memberText = await readR2Text(memberTxtKey);
-
-    const {
-      memberName,
-      memberAbout,
-    } = parseMemberTxt(memberText);
-
-    const folderPrefix =
-      memberTxtKey.substring(0, memberTxtKey.lastIndexOf("/") + 1);
-
-    const imageKeys = keys.filter((key) => {
-      if (!key.startsWith(folderPrefix)) return false;
-
-      const fileName = key.split("/").pop();
-      const lower = fileName.toLowerCase();
-
-      return (
-        (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) &&
-        !lower.startsWith("id_")
-      );
-    });
-
-    for (const key of imageKeys) {
-      photos.push({
-        name: memberName,
-        photographerName: memberName,
-        seriesName: "",
-        about: memberAbout,
-        picture: `${r2BaseUrl}/${key}`,
-      });
-    }
-  }
-
-  return photos;
 }
 
 /***********************************************************************************************
@@ -575,102 +373,118 @@ export async function genMembersPhotosArrFromR2(
   return photos;
 }
 
-/*************************************************************************************
- * genExhibitionsDB(exhibitionsListArr, exhibitionDir)
-
- * @param {Array} exhibitionsListArr - array of exhibition names      
- * @param {string} exhibitionDir - path to exhibitions directory  
- * @param {Object} exhibitionsDB - exhibitions database object
+/**
+ *  Generate exhibitions database from Cloudflare R2 storage.
+ * @param {*} exhibitionsList 
+ * @param {*} exhibitionKeys 
+ * @param {*} r2BaseUrl 
  * @returns 
- * generate exhibitions DB in the form of
- *
- * {
- *  "exhibition1Key" : {
- *   exhibitionURL: "/path/to/exhibition",
- *   exhibitionName: " exhibitionName",
- *   exhibitionAbout: " exhibitionAbout",
- *   members: [
- *     "memberName1",
- *     "memberName2",
- *     "memberName3",...
- *   ],
- *   membersDB: [
- *     {
- *       key: "member1Key",
- *       idPhoto: null,
- *       photos: [
- *         "photo1URL.jpg",
- *         "photo2URL.jpg",
- *         "photo3URL.jpg",...
- *       ],
- *       memberName: "member1Name",
- *       memberAbout: "member1About",
- *     },
- *     {
- *       key: "member2Key",
- *       idPhoto: null,
- *       photos: [
- *         "photo1URL.jpg",
- *         "photo2URL.jpg",
- *         "photo3URL.jpg",...
- *       ],
- *       memberName: "member2Name",
- *       memberAbout: "member2About",
- *     },
- *     {
- *       key: "member3Key",
- *       idPhoto: null,
- *       photos: [
- *         "photo1URL.jpg",
- *         "photo2URL.jpg",
- *         "photo3URL.jpg",...
- *       ],
- *       memberName: "member3Name",
- *       memberAbout: "member3About",
- *     },    { ... }
- *   ]
- *  },
- *  "exhibition2Key" : { ...  
- *
- *   } 
- *  ,  
- * }
- **************************************************************************************/
-export function genExhibitionsDB(exhibitionsListArr, exhibitionDir) {
-  const exhibitiosDB = {};
+ */
+export async function genExhibitionsDBFromR2(
+  exhibitionsList,
+  exhibitionKeys,
+  r2BaseUrl,
+) {
+  const exhibitionsDB = {};
 
-  // iterate over exhibitions
-  for (const exhibition of exhibitionsListArr) {
-    const currentExhbitionDB = {};
+  for (const exhibitionName of exhibitionsList) {
+    const exhibitionPrefix = `exhibitions/${exhibitionName}/`;
 
-    const exhibitionDirPath = join(exhibitionDir, exhibition);
+    const aboutTxtKey = exhibitionKeys.find(
+      (key) =>
+        key.toLowerCase() ===
+        `${exhibitionPrefix}about.txt`.toLowerCase()
+    );
 
-    const foldersList = fs.readdirSync(exhibitionDirPath);
-    const membersList = foldersList.filter((name) => {
-      if (name === ".DS_Store") return false;
-      const stats = fs.statSync(join(exhibitionDirPath, name));
-      return stats.isDirectory();
-    });
+    let exhibitionTitle = exhibitionName;
+    let exhibitionAbout = "";
+    let shuffle = "none";
 
+    if (aboutTxtKey) {
+      const aboutText = await readR2Text(aboutTxtKey);
 
-    const { memberName: exhibitionName, memberAbout: exhibitionAbout, shuffle: shuffle } = readMemberTxtIfExists(exhibitionDirPath, "about.txt");
+      const parsed = parseMemberTxt(aboutText);
 
-    currentExhbitionDB.exhibitionURL = exhibitionDirPath;
-    currentExhbitionDB.exhibitionName = exhibitionName;
-    currentExhbitionDB.exhibitionAbout = exhibitionAbout;
-    currentExhbitionDB.shuffle = shuffle;
-    const exhibitionMembersDb = genMembersDB(membersList, exhibitionDirPath);
-    currentExhbitionDB.members = membersList;
-    currentExhbitionDB.membersDB = exhibitionMembersDb;
+      exhibitionTitle = parsed.memberName || exhibitionName;
+      exhibitionAbout = parsed.memberAbout || "";
+      shuffle = parsed.shuffle || "none";
+    }
 
-    exhibitiosDB[exhibition] = currentExhbitionDB;
+    const members = [
+      ...new Set(
+        exhibitionKeys
+          .filter((key) => key.startsWith(exhibitionPrefix))
+          .map((key) => {
+            const relativePath = key.slice(exhibitionPrefix.length);
+            const parts = relativePath.split("/");
+
+            return parts.length > 1 ? parts[0] : null;
+          })
+          .filter(Boolean)
+      ),
+    ];
+
+    const membersDB = [];
+
+    for (const memberFolder of members) {
+      const memberPrefix =
+        `${exhibitionPrefix}${memberFolder}/`;
+
+      const memberTxtKey = exhibitionKeys.find(
+        (key) =>
+          key.toLowerCase() ===
+          `${memberPrefix}member.txt`.toLowerCase()
+      );
+
+      let memberName = memberFolder;
+      let memberAbout = "";
+
+      if (memberTxtKey) {
+        const memberText = await readR2Text(memberTxtKey);
+
+        const parsed = parseMemberTxt(memberText);
+
+        memberName = parsed.memberName || memberFolder;
+        memberAbout = parsed.memberAbout || "";
+      }
+
+      const photoKeys = exhibitionKeys.filter((key) => {
+        if (!key.startsWith(memberPrefix)) return false;
+
+        const relativePath =
+          key.slice(memberPrefix.length);
+
+        // only files directly inside this participant folder
+        if (relativePath.includes("/")) return false;
+
+        const lower = relativePath.toLowerCase();
+
+        return (
+          lower.endsWith(".jpg") ||
+          lower.endsWith(".jpeg")
+        );
+      });
+
+      membersDB.push({
+        key: memberFolder,
+        memberName,
+        memberAbout,
+        photos: photoKeys.map((key) => `${r2BaseUrl}/${key}`
+        ),
+      });
+    }
+
+    exhibitionsDB[exhibitionName] = {
+      exhibitionName: exhibitionTitle,
+      exhibitionAbout,
+      shuffle,
+      members,
+      membersDB
+    };
   }
-  const dbKeys = Object.keys(exhibitiosDB);
-  // console.log(dbKeys);
-  return exhibitiosDB;
+
+  return exhibitionsDB;
 }
-
-
 
 /**
  *shuffle array in place
@@ -687,65 +501,6 @@ export function shuffleArray(arr, start = 0, end = arr.length - 1) {
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;
-}
-
-/**
- *read file synchronously
- * @param {string} filePath - path to the file
- */
-export function readFileSynchronously(filePath) {
-  try {
-    const fileContent = fs.readFileSync(filePath, "utf8");
-    // console.log(fileContent);
-    return fileContent;
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-
-/**
- * Generate date string for file name
- * @param {Date} currentDate - date object  
- * @param {string} filePath - path to the file  
- */
-export function date4fileName(currentDate) {
-  const options = {
-    year: "numeric",
-    month: "numeric",
-    day: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-    second: "numeric",
-  };
-  const formattedDate = currentDate.toLocaleString("en-UK", options);
-  let dateForFileName = formattedDate.replace(",", "-");
-  dateForFileName = dateForFileName.replaceAll(":", "");
-  dateForFileName = dateForFileName.replaceAll(" ", "");
-  dateForFileName = dateForFileName.replaceAll("/", "-");
-
-  return dateForFileName;
-}
-
-/**
- * 
- * @param {*} memberDirPath 
- * @returns { memberName: string, memberAbout: string,  videoURL: string, shuffle: string, series: string}
- */
-function readMemberTxtIfExists(memberDirPath, fileName = "member.txt") {
-  const filePath = join(memberDirPath, fileName);
-
-  if (!fs.existsSync(filePath)) {
-    return { memberName: null, memberAbout: null };
-  }
-
-  try {
-    const text = fs.readFileSync(filePath, "utf8");
-    return parseMemberTxt(text);
-  } catch (error) {
-    console.error("Error reading member.txt:", error);
-    return { memberName: null, memberAbout: null, videoURL: null, shuffle: null, series: null };
-  }
 }
 
 /**
@@ -807,39 +562,41 @@ function parseMemberTxt(text) {
   return { memberName, memberAbout, videoURL, shuffle, series };
 }
 
-
 /**
- *  Generate exhibitions DB for carousel view     
- *  * @param {*} exhibistinsDB 
+ *  Generate exhibitions DB for carousel view from exhibitionsDB    
+ * @param {*} exhibitionsDB 
  * @returns 
  */
-export function genExhibitsionsDB4Carousel(exhibistinsDB) {
-  // console.log("\n\nGenerating exhibitionsDB4Carousel...");
-
+export function genExhibitsionsDB4Carousel(exhibitionsDB) {
   const exhibitionsCarouselDB = {};
 
-  for (const [exhibitionKey, exhibitionObj] of Object.entries(exhibistinsDB)) {
-    // console.log("exhibitionKey: ", exhibitionKey, "\nexhibitionObj:", Object.keys(exhibitionObj));
+  for (const [exhibitionKey, exhibitionObj] of Object.entries(exhibitionsDB)) {
+    const exhibitionPhotosArr = [];
 
-    const exhibitionDB = {};
-    exhibitionDB.exhibitionName = exhibitionObj.exhibitionName;
-    exhibitionDB.exhibitionAbout = exhibitionObj.exhibitionAbout;
-    exhibitionDB.shuffle = exhibitionObj.shuffle;
-    exhibitionDB.series = exhibitionObj.series;
-    const exhibitionPhotosArr = genExhibitionPhotosArr(exhibitionObj.exhibitionURL);
-    exhibitionDB.exhibitionPhotosArr = exhibitionPhotosArr;
+    for (const member of exhibitionObj.membersDB || []) {
+      for (const picture of member.photos || []) {
+        exhibitionPhotosArr.push({
+          name: member.memberName,
+          about: member.memberAbout,
+          picture: picture,
+        });
+      }
+    }
 
-    exhibitionsCarouselDB[exhibitionKey] = exhibitionDB;
-
+    exhibitionsCarouselDB[exhibitionKey] = {
+      exhibitionName: exhibitionObj.exhibitionName,
+      exhibitionAbout: exhibitionObj.exhibitionAbout,
+      shuffle: exhibitionObj.shuffle,
+      exhibitionPhotosArr,
+    };
   }
+
   return exhibitionsCarouselDB;
 }
-
 
 export function genExhibitsionsDB4Grid(exhibitionsDB4Carousel) {
   // console.log("\n\nGenerating exhibitionsDB4Grid...");
   const exhibitionsDB4Grid = exhibitionsDB4Carousel; // No copy.. Just for readability. We will add membersArr to each exhibition object in place.
-
 
   for (let key in exhibitionsDB4Grid) {
     const exhibition = exhibitionsDB4Grid[key];
@@ -896,255 +653,6 @@ export function buildMembers(exhibitionPhotosArr = []) {
   }
 
   return Array.from(map.values());
-}
-
-
-/**
- * Recursive function to generate exhibition photos DB
- * @param {string} dir - starting directory
- * @param {Array} files - array to accumulate photo objects
- * @returns {Array} files- array of photo objects 
- * Each photo object: { name: string, about: string, picture: string }
- */
-export function genExhibitionPhotosArr(dir, files = []) {
-
-  const fileList = fs.readdirSync(dir);
-
-  // ---- leaf detection ----
-
-  const hasSubDirs = fileList.some((file) => {
-    if (file.includes(".DS_Store")) return false;
-    const fullPath = path.join(dir, file);
-    return fs.existsSync(fullPath) && fs.statSync(fullPath).isDirectory();
-  });
-
-  // =======================
-  // LEAF FOLDER: read member.txt + collect pictures
-  // =======================
-  if (!hasSubDirs) {
-    // find member.txt (must exist in leaf)
-    const memberTxtName = fileList.find((f) => f.toLowerCase() === "member.txt");
-    if (!memberTxtName) return files;
-
-    const memberTxtPath = path.join(dir, memberTxtName);
-    const content = fs.readFileSync(memberTxtPath, "utf8");
-
-    let memberName = "";
-    let memberAbout = "";
-    let collectingAbout = false;
-
-    for (const rawLine of content.split(/\r?\n/)) {
-
-      if (rawLine.startsWith("שם:")) {
-        memberName = rawLine.replace("שם:", "").trim();
-        collectingAbout = false;
-        continue;
-      }
-
-      if (rawLine.startsWith("אודות:")) {
-        memberAbout = rawLine.replace("אודות:", "").trim();
-        collectingAbout = true;
-        continue;
-      }
-
-      if (collectingAbout) {
-        memberAbout += "\n" + rawLine.trim();
-      }
-    }
-
-
-    // collect jpg/jpeg in this leaf
-    for (const file of fileList) {
-      if (file.includes(".DS_Store")) continue;
-      if (file.startsWith("id_")) continue;
-      if (file.toLowerCase() === "member.txt") continue;
-
-      const lower = file.toLowerCase();
-      if (!lower.endsWith(".jpg") && !lower.endsWith(".jpeg")) continue;
-
-      const fullPath = path.join(dir, file);
-
-      // convert to web path like you did
-      const normalized = fullPath.replace(/\\/g, "/");
-      const webPath = normalized.split("/public")[1];
-
-      files.push({
-        name: memberName,
-        about: memberAbout,
-        picture: webPath,
-      });
-    }
-
-    return files;
-  }
-
-  // =======================
-  // NOT LEAF: recurse into subfolders
-  // =======================
-  for (const file of fileList) {
-    if (file.includes(".DS_Store")) continue;
-    if (file.startsWith("id_")) continue;
-
-    const name = path.join(dir, file);
-
-    if (fs.statSync(name).isDirectory()) {
-      genMembersPhotosArr(name, files);
-    }
-  }
-
-  return files;
-}
-
-/****************************************************************************************************
- * Recursively collect member photos, preserving photographer and series names.
- * The initial call only needs dir; recursive calls also pass files and photographerName.
- * @param {string} dir - starting directory
- * @param {Array} [files=[]] - shared array to accumulate photo objects during recursion
- * @param {string|null} [photographerName=null] - photographer name inherited from a parent folder
- * @returns {Array} Photo objects with name, photographerName, seriesName, about, and picture
- ******************************************************************************************************/
-//export function genMembersPhotosArr(dir, files = [], photographerName = null) {
-
-export function genMembersPhotosArr(dir, files = [], photographerName = null, imageBaseUrl = "") {
-
-  const fileList = fs.readdirSync(dir);
-
-  // ---------------------------------------------------------
-  // Read member.txt in the CURRENT folder, if it exists.
-  //
-  // At member level:
-  //   שם = photographer name
-  //
-  // At series level:
-  //   שם = series name
-  // ---------------------------------------------------------
-  const memberTxtFilename = fileList.find(
-    (f) => f.toLowerCase() === "member.txt"
-  );
-
-  let currentName = "";
-  let currentAbout = "";
-
-  if (memberTxtFilename) {
-    const memberTxtPath = path.join(dir, memberTxtFilename);
-    const content = fs.readFileSync(memberTxtPath, "utf8");
-
-    for (const rawLine of content.split(/\r?\n/)) {
-      const line = rawLine.trim();
-
-      if (line.startsWith("שם:")) {
-        currentName = line.replace("שם:", "").trim();
-      } else if (line.startsWith("אודות:")) {
-        currentAbout = line.replace("אודות:", "").trim();
-      }
-    }
-  }
-
-  /*
-   * If we don't yet have a photographer name, and this folder
-   * has a member.txt, then this is the photographer's folder.
-   *
-   * If photographerName already exists, currentName belongs
-   * to a series folder.
-   */
-  const effectivePhotographerName =
-    photographerName || currentName || "";
-
-  // ---------------------------------------------------------
-  // Check whether this folder contains subdirectories
-  // ---------------------------------------------------------
-  const hasSubDirs = fileList.some((file) => {
-    if (file.includes(".DS_Store")) return false;
-
-    const fullPath = path.join(dir, file);
-
-    return (
-      fs.existsSync(fullPath) &&
-      fs.statSync(fullPath).isDirectory()
-    );
-  });
-
-
-  // =========================================================
-  // LEAF FOLDER
-  // =========================================================
-  if (!hasSubDirs) {
-
-    /*
-     * If photographerName was already supplied by the parent,
-     * this leaf is a series folder and currentName is the
-     * series name.
-     *
-     * Otherwise this is a normal member folder with no series.
-     */
-    const seriesName =
-      photographerName && currentName
-        ? currentName
-        : "";
-
-    // Collect jpg/jpeg files in this leaf
-    for (const file of fileList) {
-
-      if (file.includes(".DS_Store")) continue;
-      if (file.startsWith("id_")) continue;
-      if (file.toLowerCase() === "member.txt") continue;
-
-      const lower = file.toLowerCase();
-
-      if (
-        !lower.endsWith(".jpg") &&
-        !lower.endsWith(".jpeg")
-      ) continue;
-
-      const fullPath = path.join(dir, file);
-
-      // Convert filesystem path to web path
-      const normalized = fullPath.replace(/\\/g, "/");
-      const localWebPath = normalized.split("/public")[1];
-
-      // If Cloudflare base URL exists, use it
-      const webPath = imageBaseUrl
-        ? `${imageBaseUrl}${localWebPath}`
-        : localWebPath;
-
-      files.push({
-        // Keep "name" for compatibility with current EJS
-        name: effectivePhotographerName,
-
-        // Explicit fields for future use
-        photographerName: effectivePhotographerName,
-        seriesName: seriesName,
-
-        about: currentAbout,
-        picture: webPath,
-      });
-    }
-
-    return files;
-  }
-
-
-  // =========================================================
-  // NOT LEAF — recurse into subfolders
-  // =========================================================
-  for (const file of fileList) {
-
-    if (file.includes(".DS_Store")) continue;
-    if (file.startsWith("id_")) continue;
-
-    const name = path.join(dir, file);
-
-    if (fs.statSync(name).isDirectory()) {
-      genMembersPhotosArr(
-        name,
-        files,
-        effectivePhotographerName || photographerName,
-        imageBaseUrl
-      );
-    }
-  }
-
-  return files;
 }
 
 /**
