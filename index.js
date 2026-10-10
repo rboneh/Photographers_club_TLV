@@ -3,18 +3,12 @@ import "dotenv/config";
 import express from "express"; // express framework
 import path, { dirname } from "path"; // path utilities
 import { fileURLToPath } from "url"; // to get __dirname in ES module
-import fs from "fs/promises"; // promise-based fs
 import { Resend } from "resend"; // email sending service
 import helmet from "helmet"; // security middleware
 import * as u from "./public/utilities.js"; // custom utilities
 
 
-
-// __dirname setup for ES modules
 const __dirname = dirname(fileURLToPath(import.meta.url));
-// const membersDir = path.join(__dirname, "public", "members");
-// const photoPoolDir = path.join(__dirname, "public", "photo_pool");
-const exhibitionDir = path.join(__dirname, "public", "exhibitions");
 
 const resend = new Resend(process.env.RESEND_API_KEY); // for email sending (if needed)
 
@@ -84,24 +78,6 @@ app.set("views", path.join(__dirname, "views"));
 
 // ---------- Load data BEFORE routes/server ----------
 
-
-
-/**
- * safeReadDirNames - read directory names safely, return empty array on error
- * Use to read members and exhibitions directories, filter out .DS_Store files
- * @param {*} dirPath   - path to directory 
- * @returns {Array} - array of directory names .DS_Store excluded
- */
-const safeReadDirNames = async (dirPath) => {
-  try {
-    const items = await fs.readdir(dirPath);
-    return items.filter((x) => x !== ".DS_Store"); // filter out macOS metadata files
-  } catch (err) {
-    console.error(`Error reading directory: ${dirPath}`, err);
-    return [];
-  }
-};
-
 const init = async () => {
   const aboutPicturesArr4Carousel = await u.genAboutPicturesFromR2(r2BaseUrl);
   const exhibitionKeys = await u.listR2Keys("exhibitions/");
@@ -133,13 +109,7 @@ const init = async () => {
     )
   ];
 
-  const membersDBFromR2 =
-    await u.genMembersDBFromR2(
-      membersListFromR2,
-      memberKeys,
-      r2BaseUrl
-    );
-
+  
   const membersDB =
     await u.genMembersDBFromR2(
       membersListFromR2,
