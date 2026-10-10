@@ -78,11 +78,11 @@
           </li>
           <li class="nav-item dropdown">
 
-            <% if (!locals.exhibitionsList || locals.exhibitionsList.length===0) { %>
+            <% if (!locals.exhibitionsListFromR2 || locals.exhibitionsListFromR2.length===0) { %>
 
               <!-- Disabled when empty -->
               <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">
-                תכרוכות וסופי שנה </a>
+                תערוכות וסופי שנה </a>
 
               <% } else { %>
 
@@ -93,7 +93,7 @@
 
                 <ul class="dropdown-menu">
 
-                  <% exhibitionsList.forEach(ex=> { %>
+                  <% locals.exhibitionsListFromR2.forEach(ex=> { %>
                     <li>
                       <form action="/exhibitions" method="GET">
                         <input type="hidden" name="exhibition" value="<%= ex %>">

@@ -103,20 +103,28 @@ const safeReadDirNames = async (dirPath) => {
 };
 
 const init = async () => {
-  // lists
-  // const membersList = await safeReadDirNames(membersDir);
-  // const photoPoolList = await safeReadDirNames(photoPoolDir);
-  const exhibitionsList = await safeReadDirNames(exhibitionDir);
   const aboutPicturesArr4Carousel = await u.genAboutPicturesFromR2(r2BaseUrl);
-  // const membersDB = u.genMembersDB(membersList, membersDir);
-  // const membersPhotosArr4Carousel = u.genMembersPhotosArr(membersDir);
-  // const photoPoolPhotosArr4Carousel = u.genMembersPhotosArr(photoPoolDir);
-  // const photoPoolPhotosArr4Carousel = await u.genPhotoPoolFromR2(r2BaseUrl);
-  const exhibitionsDB = u.genExhibitionsDB(exhibitionsList, exhibitionDir);
+  const exhibitionKeys = await u.listR2Keys("exhibitions/");
+  const memberKeys = await u.listR2Keys("members/");
+  const exhibitionsListFromR2 = [
+    ...new Set(
+      exhibitionKeys
+        .map((key) => key.split("/")[1])
+        .filter(Boolean)
+    )
+  ];
+  const exhibitionsDBFromR2 =
+    await u.genExhibitionsDBFromR2(
+      exhibitionsListFromR2,
+      exhibitionKeys,
+      r2BaseUrl
+    );
+  const exhibitionsDB = exhibitionsDBFromR2;
+  // console.dir(exhibitionsDBFromR2, { depth: null });
+
   const exhibitionsDB4Carousel = u.genExhibitsionsDB4Carousel(exhibitionsDB);
   const exhibitionsDB4Grid = u.genExhibitsionsDB4Grid(exhibitionsDB4Carousel);
-  const memberKeys = await u.listR2Keys("members/");
-  // console.log(memberKeys);
+
   const membersListFromR2 = [
     ...new Set(
       memberKeys
@@ -124,7 +132,7 @@ const init = async () => {
         .filter(Boolean)
     )
   ];
-  
+
   const membersDBFromR2 =
     await u.genMembersDBFromR2(
       membersListFromR2,
@@ -146,12 +154,11 @@ const init = async () => {
       r2BaseUrl
     );
 
-  // console.log("membersDBFromR2:", membersDBFromR2);
 
 
-  // make exhibitionsList available to all EJS views
+  // make exhibitionsListFromR2 available to all EJS views
   app.use((req, res, next) => {
-    res.locals.exhibitionsList = exhibitionsList;
+    res.locals.exhibitionsListFromR2 = exhibitionsListFromR2;
     // res.locals.exhibitionsDB = exhibitionsDB;
     next();
   });
@@ -197,7 +204,7 @@ const init = async () => {
     }
 
     // exhibitions pages
-    for (const exName of exhibitionsList) {
+    for (const exName of exhibitionsListFromR2) {
       urls.push(
         `${origin}/exhibitions?exhibition=${encodeURIComponent(exName)}`
       );
@@ -307,7 +314,7 @@ ${urls
     }
 
     // (optional) validate selection exists in list
-    if (!exhibitionsList.includes(exhibitionName)) {
+    if (!exhibitionsListFromR2.includes(exhibitionName)) {
       return res.status(404).send("Exhibition not found");
     }
 
@@ -363,7 +370,7 @@ ${urls
 
   // ---------- Start server ----------
   app.listen(port, () => {
-    // console.log(`Listening on port ${port}`);
+    console.log(`Listening on port ${port}`);
   });
 };
 
