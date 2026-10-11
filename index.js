@@ -5,12 +5,9 @@ import path, { dirname } from "path"; // path utilities
 import { fileURLToPath } from "url"; // to get __dirname in ES module
 import { Resend } from "resend"; // email sending service
 import helmet from "helmet"; // security middleware
-import * as u from "./public/utilities.js"; // custom utilities
-
+import * as u from "./lib/utilities.js"; // custom utilities
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-
-const resend = new Resend(process.env.RESEND_API_KEY); // for email sending (if needed)
 
 const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
 const r2BaseUrl = process.env.R2_BASE_URL;
@@ -69,7 +66,6 @@ app.use(
   })
 );
 
-
 app.use(express.urlencoded({ extended: true })); // to parse form data
 
 // set EJS as templating engine 
@@ -79,9 +75,12 @@ app.set("views", path.join(__dirname, "views"));
 // ---------- Load data BEFORE routes/server ----------
 
 const init = async () => {
-  const aboutPicturesArr4Carousel = await u.genAboutPicturesFromR2(r2BaseUrl);
-  const exhibitionKeys = await u.listR2Keys("exhibitions/");
-  const memberKeys = await u.listR2Keys("members/");
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const [aboutPicturesArr4Carousel, exhibitionKeys, memberKeys] = await Promise.all([
+    u.genAboutPicturesFromR2(r2BaseUrl),
+    u.listR2Keys("exhibitions/"),
+    u.listR2Keys("members/"),
+  ]);
   const exhibitionsListFromR2 = [
     ...new Set(
       exhibitionKeys
@@ -89,18 +88,6 @@ const init = async () => {
         .filter(Boolean)
     )
   ];
-  const exhibitionsDBFromR2 =
-    await u.genExhibitionsDBFromR2(
-      exhibitionsListFromR2,
-      exhibitionKeys,
-      r2BaseUrl
-    );
-  const exhibitionsDB = exhibitionsDBFromR2;
-  // console.dir(exhibitionsDBFromR2, { depth: null });
-
-  const exhibitionsDB4Carousel = u.genExhibitsionsDB4Carousel(exhibitionsDB);
-  const exhibitionsDB4Grid = u.genExhibitsionsDB4Grid(exhibitionsDB4Carousel);
-
   const membersListFromR2 = [
     ...new Set(
       memberKeys
@@ -109,42 +96,36 @@ const init = async () => {
     )
   ];
 
-  
-  const membersDB =
-    await u.genMembersDBFromR2(
+  const [exhibitionsDB, membersDB] = await Promise.all([
+    u.genExhibitionsDBFromR2(
+      exhibitionsListFromR2,
+      exhibitionKeys,
+      r2BaseUrl
+    ),
+    u.genMembersDBFromR2(
       membersListFromR2,
       memberKeys,
       r2BaseUrl
-    );
+    ),
+  ]);
 
-  const membersPhotosArr4Carousel =
-    await u.genMembersPhotosArrFromR2(
-      membersListFromR2,
-      memberKeys,
-      r2BaseUrl
-    );
+  const exhibitionsDB4Grid = u.genExhibitionsDB4Grid(exhibitionsDB);
 
+  const membersByKey = new Map(
+    membersDB.map(member => [member.key, member])
+  );
 
+  const membersPhotosArr4Carousel = u.genMembersPhotosArr(membersDB);
 
   // make exhibitionsListFromR2 available to all EJS views
   app.use((req, res, next) => {
     res.locals.exhibitionsListFromR2 = exhibitionsListFromR2;
-    // res.locals.exhibitionsDB = exhibitionsDB;
-    next();
-  });
-
-  app.use((req, res, next) => {
     res.locals.pageTitle = res.locals.pageTitle || "מועדון הצילום תל אביב";
     res.locals.pageDescription = res.locals.pageDescription || "מועדון צילום תל אביב – קהילה של צלמים, תערוכות ותיקי עבודות.";
-    next();
-  });
-
-  app.use((req, res, next) => {
     res.locals.baseUrl = baseUrl;
     res.locals.canonicalPath = req.path;
     next();
   });
-
 
   /** * Sitemap route - dynamically generate sitemap.xml based on current members and exhibitions
    * This helps search engines discover all pages of the site, including member pages and exhibition pages
@@ -191,7 +172,6 @@ ${urls
     res.send(xml);
   });
 
-
   //==============================================================================================================
   ///////////////// ---------- Routes ------------------------------------------------//////////////////////////
   //==============================================================================================================
@@ -199,35 +179,20 @@ ${urls
   app.get(["/", "/home"], (req, res) => {
     const shuffeldPhotoObjArr = u.shuffleArray([...membersPhotosArr4Carousel]);
     res.render("pages/index.ejs", {
-      membersPhotos: null,
-      picturesList: null,
       membersPhotosArr4Carousel: shuffeldPhotoObjArr,
-      exhibitionPhotos: null,
     });
   });
 
   app.get("/about", (req, res) => {
     const sent = req.query.sent; // "1" או "0" או undefined
     res.render("pages/club-about.ejs", {
-      membersPhotos: null,
-      picturesDB: null,
-      exhibitionPhotos: null,
-      membersDB: null,
       aboutPicturesArray: u.shuffleArray([...aboutPicturesArr4Carousel]),
       sent: sent,
     });
   });
 
   app.get("/terms", (req, res) => {
-    const sent = req.query.sent; // "1" או "0" או undefined
-    res.render("pages/terms.ejs", {
-      membersPhotos: null,
-      picturesDB: null,
-      exhibitionPhotos: null,
-      membersDB: null,
-      aboutPicturesArray: null,
-      sent: null
-    });
+    res.render("pages/terms.ejs");
   });
   app.get("/contact", (req, res) => {
     res.sendStatus(201);
@@ -236,34 +201,22 @@ ${urls
   //members cards page
   app.get("/members", (req, res) => {
     res.render("pages/members-cards.ejs", {
-      membersPhotos: null,
-      picturesDB: null,
-      exhibitionPhotos: null,
       membersDB: membersDB,
     });
   });
 
   // member page route
   app.get("/member/:key", (req, res) => {
-    const memberKey = req.params.key;
-
-    // console.log("Member requested:", memberKey);
-
-    const member = membersDB.find(m => m.key === memberKey);
+    const member = membersByKey.get(req.params.key);
 
     if (!member) {
       return res.status(404).send("Member not found");
     }
 
-    // console.log(u.youtubeEmbed(member.videoURL));
     res.render("pages/member-page-grid.ejs", {
       member: member,
       pageTitle: `${member.memberName} | מועדון הצילום תל אביב`,
       pageDescription: member.memberAbout,
-      membersPhotos: null,
-      picturesDB: null,
-      exhibitionPhotos: null,
-      membersDB: null,
       videoURL: u.youtubeEmbed(member.videoURL),
     });
   });
@@ -276,8 +229,6 @@ ${urls
       return res.status(400).send("No exhibition selected");
     }
 
-    // const currentExhibitionDir = path.join(exhibitionDir, exhibitionName);
-
     const exhibitionObj = exhibitionsDB4Grid[exhibitionName];
     if (!exhibitionObj) {
       return res.status(404).send("Exhibition not found in DB");
@@ -288,19 +239,16 @@ ${urls
       return res.status(404).send("Exhibition not found");
     }
 
-    // shuffle members for each exhibition page load, but keep first and last member fixed (e.g. for special placements)
+    const membersArr = [...exhibitionObj.membersArr];
     if (exhibitionObj.shuffle === "מלא") {
-      exhibitionObj.membersArr = u.shuffleArray(exhibitionObj.membersArr, 0, exhibitionObj.membersArr.length - 1); // shuffle members for each exhibition page load
+      u.shuffleArray(membersArr);
     } else if (exhibitionObj.shuffle === "חלקי") {
-      exhibitionObj.membersArr = u.shuffleArray(exhibitionObj.membersArr, 1, exhibitionObj.membersArr.length - 2); // shuffle members for each exhibition page load, but keep first member fixed
+      // Keep the original first and last members in place.
+      u.shuffleArray(membersArr, 1, membersArr.length - 2);
     }
-    // res.render("pages/exhibition-page-carousel.ejs", {
     res.render("pages/exhibition-page-grid.ejs", {
-      membersPhotos: null,
-      picturesList: null,
-      exhibitionPhotos: null,
       exhibitionKey: exhibitionName,
-      exhibitionObj: exhibitionObj,
+      exhibitionObj: { ...exhibitionObj, membersArr },
     });
   });
 
@@ -309,7 +257,6 @@ ${urls
    */
   app.post("/contact", async (req, res) => {
     const { name, email, message } = req.body;
-    // console.log("POST /contact hit", req.body);
 
     const to = process.env.CONTACT_EMAIL;
     if (!to) {
@@ -318,7 +265,7 @@ ${urls
     }
 
     try {
-      const result = await resend.emails.send({
+      const { error } = await resend.emails.send({
         from: "Club TLV <onboarding@resend.dev>",
         to: [to],                 // ← מערך, בטוח
         replyTo: email,           // ← זה השם הנכון ב-SDK (לא reply_to)
@@ -326,7 +273,11 @@ ${urls
         text: `From: ${name} <${email}>\n\n${message}`,
       });
 
-      // console.log("Resend result:", result);
+      if (error) {
+        console.error("Resend error:", error);
+        return res.redirect("/about?sent=0");
+      }
+
       return res.redirect("/about?sent=1");
     } catch (err) {
       console.error("Resend error:", err);
@@ -334,15 +285,19 @@ ${urls
     }
   });
 
-
   // static files middleware - serve CSS, JS, images from public directory
   app.use(express.static(path.join(__dirname, "public"))); // static files middleware
 
   // ---------- Start server ----------
-  app.listen(port, () => {
-    console.log(`Listening on port ${port}`);
+  await new Promise((resolve, reject) => {
+    const server = app.listen(port, resolve);
+    server.once("error", reject);
   });
+  console.log(`Listening on port ${port}`);
 };
 
 // run init
-init();
+init().catch((error) => {
+  console.error("Failed to start server:", error);
+  process.exit(1);
+});

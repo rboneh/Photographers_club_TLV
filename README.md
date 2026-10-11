@@ -44,8 +44,9 @@ The contact sender is currently hardcoded in `index.js` as `Club TLV <onboarding
 
 ```text
 index.js                 Express setup, startup data loading, routes, and email handler
+lib/
+  utilities.js           R2 loaders, metadata parsing, and photo grouping
 public/
-  utilities.js           Filesystem loaders, metadata parsing, and photo grouping
   styles/main.css        Custom styles
   members/               Member profiles, portraits, photos, and series
   exhibitions/           Exhibition metadata and participant photos
@@ -156,7 +157,7 @@ There are no automated test or lint scripts in `package.json`. Basic JavaScript 
 
 ```sh
 node --check index.js
-node --check public/utilities.js
+node --check lib/utilities.js
 ```
 
 After changes, start the app and check the homepage, member list, a member portfolio, an exhibition, and the about page. Test email delivery separately with configured Resend credentials.
