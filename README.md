@@ -1,8 +1,10 @@
 # TLV Photographers Club
 
-Hebrew photography club website built with Node.js, Express 5, and EJS. It features member portfolios, photo series, exhibitions, a homepage photo carousel, and an about page with a contact form.
+Hebrew photography club website built with Node.js, Express 5, and EJS. The site includes member portfolios, photographic series, exhibitions, a homepage photo carousel, an about page, and a contact form.
 
-Photos and metadata live in the `public/` directory. The server reads them into memory at startup; no external database is required. Bootstrap and custom CSS provide the presentation, Helmet configures HTTP security headers, and Resend handles contact emails.
+Photos and content metadata are stored in **Cloudflare R2** rather than in the application repository. At startup, the server reads the R2 object structure and metadata into memory; no external database is required.
+
+Bootstrap and custom CSS provide the presentation, Helmet configures HTTP security headers, and Resend handles contact emails.
 
 ## Run locally
 
@@ -19,6 +21,13 @@ The Dockerfile uses Node.js 22.14.0. Use Node.js 22 and npm for a matching local
    ```dotenv
    PORT=3000
    BASE_URL=http://localhost:3000
+
+   R2_ACCOUNT_ID=replace_with_your_cloudflare_account_id
+   R2_ACCESS_KEY_ID=replace_with_your_read_only_access_key_id
+   R2_SECRET_ACCESS_KEY=replace_with_your_read_only_secret_access_key
+   R2_BUCKET=20-1-photographers-club-tlv-images
+   R2_BASE_URL=https://your-public-r2-url.r2.dev
+
    RESEND_API_KEY=replace_with_your_resend_api_key
    CONTACT_EMAIL=recipient@example.com
    ```
@@ -31,50 +40,93 @@ The Dockerfile uses Node.js 22.14.0. Use Node.js 22 and npm for a matching local
 
 4. Open <http://localhost:3000>.
 
+### Environment variables
+
 | Variable | Purpose |
 | --- | --- |
 | `PORT` | HTTP port; defaults to `3000`. |
-| `BASE_URL` | Site origin for canonical URLs and the sitemap. Defaults to localhost with the configured port. Set this to the public origin in production. |
-| `RESEND_API_KEY` | Required to construct the Resend client at startup. Use a valid key for email delivery. |
-| `CONTACT_EMAIL` | Recipient for contact form submissions. If missing, the handler redirects to `/about?sent=0`. |
+| `BASE_URL` | Site origin used for canonical URLs and the sitemap. |
+| `R2_ACCOUNT_ID` | Cloudflare account ID used to construct the R2 S3 endpoint. |
+| `R2_ACCESS_KEY_ID` | R2 access key used by the application. The production application should use a read-only token. |
+| `R2_SECRET_ACCESS_KEY` | Secret key matching `R2_ACCESS_KEY_ID`. |
+| `R2_BUCKET` | R2 bucket containing the site's photographs and metadata. |
+| `R2_BASE_URL` | Public R2 URL used to construct image URLs returned to the templates. |
+| `RESEND_API_KEY` | Resend API key used by the contact form. |
+| `CONTACT_EMAIL` | Recipient for contact form submissions. |
 
-The contact sender is currently hardcoded in `index.js` as `Club TLV <onboarding@resend.dev>`. Configure the sender and recipient for your Resend account before using the form in production. `.env` is excluded from Git and Docker build context.
+The application only needs **read access** to R2. Read/write R2 credentials used for content maintenance should be kept separately, for example in the local `rclone` configuration, and should not be deployed to Fly.io.
+
+`.env` is excluded from Git and should never be committed.
 
 ## Project structure
 
 ```text
-index.js                 Express setup, startup data loading, routes, and email handler
+index.js                 Express setup, startup loading, routes, and email handler
+
 lib/
-  utilities.js           R2 loaders, metadata parsing, and photo grouping
+  utilities.js           R2 access, metadata parsing, photo grouping,
+                         member loading, and exhibition loading
+
 public/
-  styles/main.css        Custom styles
-  members/               Member profiles, portraits, photos, and series
-  exhibitions/           Exhibition metadata and participant photos
-  photo_pool/            Additional photo pool loaded at startup
-  about_photo_pool/      Photos for the about page
-  pictures/              Shared image assets
-  robots.txt             Crawler instructions
+  styles/
+    main.css              Custom styles
+  pictures/               Local shared/static UI assets
+  robots.txt              Crawler instructions
+
 views/
-  pages/                 EJS page templates
-  partials/              Shared header and footer
+  pages/                  EJS page templates
+  partials/               Shared header and footer
+
 Dockerfile               Container build and startup configuration
-fly.toml                 Local Fly.io deployment configuration
+fly.toml                 Fly.io deployment configuration
 ```
 
-## Manage photos and metadata
+The photographic content itself is not stored in `public/`. It resides in Cloudflare R2.
 
-Keep `public/members`, `public/exhibitions`, `public/photo_pool`, and `public/about_photo_pool` present: startup scans all four directories. Keep member and exhibition entries as folders, since the loaders treat their names as content keys.
+## Cloudflare R2 content structure
 
-### Members and series
-
-Create a folder under `public/members/` for each member. Its exact name becomes the key used by `/member/:key`.
+The R2 bucket currently uses these top-level prefixes:
 
 ```text
-public/members/example_member/
+about_photo_pool/
+exhibitions/
+members/
+photo_pool/
+pictures/
+```
+
+R2 folders are object-key prefixes rather than physical directories.
+
+The application scans R2 at startup, builds the member and exhibition databases in memory, and generates public image URLs using `R2_BASE_URL`.
+
+Restart or redeploy the application after changing R2 metadata or directory structure so that the in-memory collections are rebuilt.
+
+## Members
+
+Each member has a prefix under:
+
+```text
+members/<member-key>/
+```
+
+For example:
+
+```text
+members/example_member/
   member.txt
   id_portrait.jpg
   photo01.jpg
   photo02.jpg
+  s1/
+    member.txt
+    photo01.jpg
+    photo02.jpg
+```
+
+The member folder name becomes the key used by:
+
+```text
+/member/:key
 ```
 
 Example `member.txt`:
@@ -86,18 +138,46 @@ Example `member.txt`:
 אפשר להוסיף שורות נוספות לתיאור.
 ```
 
-The video field is optional. Put `אודות:` last: the member metadata parser treats all following lines as biography text. Use the exact `שם:` and `אודות:` labels shown above so the carousel parser also recognizes them.
+`וידאו:` is optional.
 
-For photo series, create subfolders such as `s1/` and `s2/`, each containing photos and its own `member.txt`. In a series folder, `שם:` is the series title and `אודות:` describes the series. Keep the photographer's metadata and portrait in the parent folder.
+`אודות:` should remain the final metadata field because the current parser treats all following lines as description text.
 
-Gallery and carousel loaders accept `.jpg` and `.jpeg`, ignoring extension capitalization. Files starting with lowercase `id_` are excluded from regular photo collections; an `id_*.jpg` file directly inside the member folder provides the portrait.
+Direct `.jpg` and `.jpeg` files are treated as member photographs.
 
-The homepage uses member photos. Its recursive carousel loader collects images only from leaf folders (folders without subdirectories), so place gallery photos inside the series folders when using series. It carries the photographer's name down from the parent folder.
+Files beginning with `id_` are reserved for identification/portrait images and are excluded from ordinary member galleries.
 
-### Exhibitions
+### Photo series
+
+A member can contain subfolders representing photographic series:
 
 ```text
-public/exhibitions/example_exhibition/
+members/example_member/
+  s1/
+    member.txt
+    photo01.jpg
+    photo02.jpg
+```
+
+Inside a series:
+
+- `שם:` is the series title.
+- `אודות:` is the series description.
+- JPEG files become the series photographs.
+
+The homepage carousel is generated from the already-loaded member database and may include both direct member photographs and photographs from series.
+
+## Exhibitions
+
+Each exhibition has a prefix under:
+
+```text
+exhibitions/<exhibition-key>/
+```
+
+Example:
+
+```text
+exhibitions/example_exhibition/
   about.txt
   example_member/
     member.txt
@@ -112,56 +192,258 @@ Example `about.txt`:
 אודות: תיאור התערוכה
 ```
 
-`ערבוב: מלא` shuffles all participant groups on each request. `ערבוב: חלקי` shuffles the middle groups while keeping the first and last fixed. Omit the field to retain the loaded order. Put it before `אודות:`.
+Supported shuffle modes:
 
-Use the same member metadata format inside each participant folder. The exhibition directory name is the value of the `exhibition` query parameter.
+- `ערבוב: מלא` — shuffle all participant groups.
+- `ערבוב: חלקי` — shuffle the middle participant groups while keeping the first and last fixed.
+- no `ערבוב:` field — retain the loaded order.
 
-### Other photo pools
+The shuffle field should appear before `אודות:`.
 
-`public/about_photo_pool/` supplies the about page carousel, using the same folder and `member.txt` conventions. `public/photo_pool/` is loaded at startup, but the current homepage uses `public/members/` instead.
+Exhibition participant folders use the same `member.txt` format used elsewhere.
 
-Restart the server after changing photos, metadata, or content folders to rebuild the in-memory collections.
+Files beginning with `id_` are excluded from exhibition photo collections.
+
+The exhibition page is selected using:
+
+```text
+/exhibitions?exhibition=<exhibition-key>
+```
+
+The route makes a copy of the participant array before shuffling so the in-memory exhibition database is not mutated between requests.
+
+## About photo pool
+
+The about page content is loaded from:
+
+```text
+about_photo_pool/
+```
+
+It uses the same folder and `member.txt` conventions as other photo collections.
+
+## Additional photo pool
+
+The bucket also contains:
+
+```text
+photo_pool/
+```
+
+This remains available as a separate content pool, although the homepage carousel is currently generated from the member database.
+
+## R2 access
+
+The application uses the AWS S3 client with Cloudflare's R2-compatible S3 API.
+
+The endpoint is constructed from:
+
+```text
+https://<R2_ACCOUNT_ID>.r2.cloudflarestorage.com
+```
+
+Object listing uses `ListObjectsV2` with continuation tokens, so prefixes containing more than 1,000 objects can be loaded correctly.
+
+The application requires only:
+
+- object listing
+- object reading
+
+Production should therefore use a **read-only R2 API token**.
+
+Content maintenance and uploads can use a separate **read/write token**, for example through `rclone`.
+
+## Managing R2 with rclone
+
+The local `rclone` remote is configured separately from the application `.env`.
+
+A typical bucket check is:
+
+```sh
+rclone lsf r2:20-1-photographers-club-tlv-images
+```
+
+For a token limited to object read/write permissions, the R2 remote should include:
+
+```ini
+no_check_bucket = true
+```
+
+This prevents `rclone` from attempting bucket-level operations such as `CreateBucket`.
+
+Read/write credentials used by `rclone` should not be copied into Fly.io or into the application's read-only production configuration.
 
 ## Routes
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| GET | `/`, `/home` | Homepage with shuffled member photos |
-| GET | `/about` | Club information, photos, and contact form |
+| GET | `/`, `/home` | Homepage with shuffled member photographs |
+| GET | `/about` | Club information, photographs, and contact form |
 | GET | `/members` | Member cards |
-| GET | `/member/:key` | Individual portfolio and optional video |
-| GET | `/exhibitions?exhibition=<folder-name>` | Selected exhibition; URL-encode the folder name |
+| GET | `/member/:key` | Individual member portfolio and optional video |
+| GET | `/exhibitions?exhibition=<key>` | Selected exhibition |
 | GET | `/terms` | Terms of use |
-| GET | `/sitemap.xml` | Generated sitemap for home, about, members, and exhibitions |
+| GET | `/sitemap.xml` | Generated sitemap |
 | POST | `/contact` | Submit the contact form through Resend |
-| GET | `/contact` | Placeholder returning HTTP `201` |
 
-Static assets are served directly from `public/`, so `public/members/...` is accessible at `/members/...`.
+Static application assets are served from `public/`.
+
+Photographs stored in R2 are delivered using their public R2 URLs.
+
+## Contact form
+
+Resend handles contact form submissions.
+
+Required variables:
+
+```dotenv
+RESEND_API_KEY=...
+CONTACT_EMAIL=...
+```
+
+The sender is currently configured in the application code. Make sure the configured sender is valid for the associated Resend account before relying on contact-form delivery in production.
 
 ## Deployment
 
-Build and run the included Docker image from the project root:
+The production application runs on Fly.io.
+
+Current Fly application:
+
+```text
+20-1-photographers-club-tlv
+```
+
+Production URL:
+
+```text
+https://20-1-photographers-club-tlv.fly.dev
+```
+
+The Fly application runs in the `ams` region and exposes the Node application on port `3000`.
+
+Production secrets include:
+
+```text
+BASE_URL
+CONTACT_EMAIL
+RESEND_API_KEY
+R2_ACCOUNT_ID
+R2_ACCESS_KEY_ID
+R2_SECRET_ACCESS_KEY
+R2_BUCKET
+R2_BASE_URL
+```
+
+The R2 credentials deployed to Fly should be the **read-only** credentials.
+
+Deploy with:
+
+```sh
+fly deploy
+```
+
+Inspect deployed secrets with:
+
+```sh
+fly secrets list -a 20-1-photographers-club-tlv
+```
+
+Inspect application status with:
+
+```sh
+fly status -a 20-1-photographers-club-tlv
+```
+
+Inspect startup/runtime logs with:
+
+```sh
+fly logs -a 20-1-photographers-club-tlv
+```
+
+Changing Fly secrets causes the application Machine to restart with the new environment.
+
+## Docker
+
+Build locally:
 
 ```sh
 docker build -t tlv-photographers-club .
-docker run --rm -p 3000:3000 --env-file .env tlv-photographers-club
 ```
 
-Use `PORT=3000` with this port mapping. The image includes the local content folders and runs `npm run start`.
+Run using the local `.env`:
 
-The local `fly.toml` targets `20-1-photographers-club-tlv` in the `ams` region, routes traffic to port `3000`, enables HTTPS, and sets the production `BASE_URL`. It is currently ignored by Git; a fresh checkout may need its own Fly.io configuration. Supply `RESEND_API_KEY` and `CONTACT_EMAIL` through the deployment environment. Check `public/robots.txt` when changing the public domain because its sitemap URL is static.
+```sh
+docker run --rm \
+  -p 3000:3000 \
+  --env-file .env \
+  tlv-photographers-club
+```
+
+The Docker image does not contain the photographic archive. Photographs are loaded from R2 when the application starts.
+
+## Search engines
+
+The site provides:
+
+```text
+/robots.txt
+/sitemap.xml
+```
+
+The sitemap is generated by the application and includes the main site pages, member pages, and exhibitions.
+
+When changing the site's public hostname, review:
+
+- `BASE_URL`
+- canonical URLs
+- sitemap output
+- `public/robots.txt`
 
 ## Validation
 
-There are no automated test or lint scripts in `package.json`. Basic JavaScript syntax checks:
+There are currently no automated test or lint scripts in `package.json`.
+
+Basic JavaScript syntax checks:
 
 ```sh
 node --check index.js
 node --check lib/utilities.js
 ```
 
-After changes, start the app and check the homepage, member list, a member portfolio, an exhibition, and the about page. Test email delivery separately with configured Resend credentials.
+After code or content changes, verify at least:
 
-## Planned work
+- homepage
+- about page
+- member list
+- individual member page
+- member series
+- exhibition
+- image loading from R2
+- contact form
+- sitemap
 
-- Move image storage to Cloudflare. Images are currently served from local files; Cloudflare storage is not integrated yet.
+Because R2 content is loaded into memory during application startup, restart the local server or Fly Machine after structural or metadata changes that need to be reflected immediately.
+
+## Current architecture
+
+```text
+Cloudflare R2
+      |
+      |  S3-compatible API
+      v
+Node / Express
+      |
+      |  loads metadata and object lists at startup
+      v
+In-memory member / exhibition data
+      |
+      v
+EJS templates
+      |
+      v
+Browser
+      |
+      +---- photographs loaded directly from public R2 URLs
+```
+
+There is currently no database and no Cloudinary dependency.
