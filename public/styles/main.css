@@ -277,8 +277,39 @@ footer a:hover {
 
 #photoModal #modalImg {
   max-width: 90vw;
-  max-height: 90vh;
+  max-height: calc(90vh - 2rem);
   object-fit: contain;
+}
+
+#photoModal .rb-photo-nav {
+  direction: ltr;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  width: 3rem;
+  height: 3rem;
+  border: 1px solid rgba(255, 255, 255, .5);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, .65);
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+#photoModal .rb-photo-prev {
+  left: .5rem;
+}
+
+#photoModal .rb-photo-next {
+  right: .5rem;
+}
+
+#photoModal .rb-photo-nav:hover,
+#photoModal .rb-photo-nav:focus-visible {
+  background: rgba(0, 0, 0, .9);
+  outline: 2px solid white;
+  outline-offset: 2px;
 }
 
 /* Optional: hover effect */
@@ -357,4 +388,8 @@ footer a:hover {
   display: block;
   width: 100%;
   height: auto;
+}
+
+..modal-backdrop.show {
+    opacity: 0.92;
 }
