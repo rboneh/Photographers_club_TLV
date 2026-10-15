@@ -273,14 +273,23 @@ footer a:hover {
   border: 0;
 }
 
+#photoModal .modal-content > .btn-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
+}
+
 #photoModal .modal-body {
   height: 90vh;
 }
 
 #photoModal #modalImg {
-  max-width: 100%;
+  max-width: 90vw;
   max-height: calc(90vh - 2rem);
   object-fit: contain;
+  border: 0;
+  /* border: 1px solid rgba(255, 255, 255, 0.25); */
 }
 
 #photoModal .rb-photo-nav {

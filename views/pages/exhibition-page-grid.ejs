@@ -100,7 +100,15 @@
                         aria-label="Close"></button>
 
                     <div class="modal-body p-0 d-flex justify-content-center align-items-center">
+                        <button type="button" id="modalPrev" class="rb-photo-nav rb-photo-prev"
+                            aria-label="הצילום הקודם" aria-controls="modalImg" hidden>
+                            <span aria-hidden="true">&#10094;</span>
+                        </button>
                         <img id="modalImg" class="img-fluid" alt="">
+                        <button type="button" id="modalNext" class="rb-photo-nav rb-photo-next"
+                            aria-label="הצילום הבא" aria-controls="modalImg" hidden>
+                            <span aria-hidden="true">&#10095;</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -112,6 +120,10 @@
             const modalImg = document.getElementById("modalImg");
             const modalEl = document.getElementById("photoModal");
             const photoModal = modalEl ? new bootstrap.Modal(modalEl) : null;
+            const modalPrev = document.getElementById("modalPrev");
+            const modalNext = document.getElementById("modalNext");
+            let seriesButtons = [];
+            let currentPhotoIndex = 0;
 
             function setModalFromBtn(btn) {
                 const src = btn?.dataset?.imgSrc;
@@ -121,16 +133,34 @@
                 }
             }
 
-            // Click anywhere on a thumbnail opens modal (works for all member grids)
+            function showPhoto(index) {
+                if (!seriesButtons.length) return;
+                currentPhotoIndex = (index + seriesButtons.length) % seriesButtons.length;
+                document.querySelectorAll(".rb-thumb.active").forEach(btn => btn.classList.remove("active"));
+                const btn = seriesButtons[currentPhotoIndex];
+                btn.classList.add("active");
+                setModalFromBtn(btn);
+            }
+
+            modalPrev.addEventListener("click", () => showPhoto(currentPhotoIndex - 1));
+            modalNext.addEventListener("click", () => showPhoto(currentPhotoIndex + 1));
+
+            modalEl.addEventListener("keydown", (e) => {
+                if (seriesButtons.length < 2) return;
+                if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+                    e.preventDefault();
+                    showPhoto(currentPhotoIndex + (e.key === "ArrowLeft" ? -1 : 1));
+                }
+            });
+
+            // Open the modal with only the selected member's pictures.
             document.addEventListener("click", (e) => {
                 const btn = e.target.closest(".rb-thumb");
                 if (!btn) return;
 
-                // optional: toggle "active" class for your animation/state
-                document.querySelectorAll(".rb-thumb.active").forEach(b => b.classList.remove("active"));
-                btn.classList.add("active");
-
-                setModalFromBtn(btn);
+                seriesButtons = Array.from(btn.closest(".masonry").querySelectorAll(".rb-thumb"));
+                modalPrev.hidden = modalNext.hidden = seriesButtons.length < 2;
+                showPhoto(seriesButtons.indexOf(btn));
                 if (photoModal) photoModal.show();
             });
         </script>
